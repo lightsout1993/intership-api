@@ -34,20 +34,21 @@ export class TokenService {
 
   async check(
     refreshCredentialsDto: RefreshCredentialsDto,
-  ): Promise<IToken> {
+  ): Promise<IToken | null> {
     const { refreshToken, fingerprint } = refreshCredentialsDto;
 
     const token: Token = await this.TokenModel.findOne({ refreshToken });
 
     if (token && token.fingerprint !== fingerprint) {
-      return await this.remove(token.userId);
+      await this.remove(token.userId);
+      return null;
     }
 
     return token;
   }
 
-  private async remove(userId: Types.ObjectId): Promise<IToken> {
-    return await this.TokenModel.remove({ userId });
+  private async remove(userId: Types.ObjectId): Promise<void> {
+    await this.TokenModel.remove({ userId });
   }
 
   async update(
@@ -55,7 +56,7 @@ export class TokenService {
     { refreshToken }: TokensDto,
     fingerprint: string,
   ): Promise<IToken> {
-    return await this.TokenModel.update(
+    return await this.TokenModel.updateOne(
       { _id }, { $set: { refreshToken, fingerprint } },
     );
   }
