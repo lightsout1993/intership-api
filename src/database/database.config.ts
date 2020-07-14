@@ -6,7 +6,7 @@ interface IDatabaseConfig {
 }
 
 export const databaseConfig = (): IDatabaseConfig => ({
-  uri: `mongodb://127.0.0.1:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+  uri: `mongodb://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   reconnectInterval: 6000,
