@@ -7,4 +7,5 @@ import { connectionProvider } from './connection.provider';
   imports: [
     MongooseModule.forRootAsync(connectionProvider)],
 })
-export class DatabaseModule {}
+export class DatabaseModule {
+}

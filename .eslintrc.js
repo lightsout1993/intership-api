@@ -20,6 +20,7 @@ module.exports = {
     jest: true,
   },
   rules: {
+    'no-return-await': 'off',
     'no-useless-constructor': 'off',
 
     'import/no-unresolved': 'off',
