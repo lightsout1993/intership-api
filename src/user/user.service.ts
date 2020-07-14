@@ -34,9 +34,7 @@ export class UserService {
     return this.create(userCredentials);
   }
 
-  async validateUserPassword(
-    authCredentialsDto: AuthCredentialsDto,
-  ): Promise<User | never> {
+  async validateUserPassword(authCredentialsDto: AuthCredentialsDto): Promise<IUser | never> {
     const { username, password } = authCredentialsDto;
     const user = await this.findOne(username);
 
@@ -44,7 +42,6 @@ export class UserService {
       throw new ConflictException('User with such username not found');
     }
 
-    console.log(bcrypt);
     const passwordHash = await bcrypt.hash(password, user.salt);
 
     if (user.password !== passwordHash) {
@@ -54,7 +51,7 @@ export class UserService {
     return user;
   }
 
-  async findOne(username: string): Promise<User> {
+  async findOne(username: string): Promise<IUser> {
     return await this.UserModel.findOne({ username });
   }
 }

@@ -15,7 +15,7 @@ export const JWTProvider = {
   useFactory: async (configService: ConfigService): Promise<JWTFactory> => ({
     secret: configService.get('JWT_SECRET'),
     signOptions: {
-      expiresIn: '1h',
+      expiresIn: '1d',
     },
   }),
   inject: [ConfigService],
