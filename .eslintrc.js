@@ -21,6 +21,7 @@ module.exports = {
   },
   rules: {
     'no-return-await': 'off',
+    'no-underscore-dangle': 'off',
     'no-useless-constructor': 'off',
 
     'import/no-unresolved': 'off',
