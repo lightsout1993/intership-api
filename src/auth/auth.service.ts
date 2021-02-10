@@ -29,7 +29,7 @@ export class AuthService {
     );
   }
 
-  async login(authCredentialsDto: AuthCredentialsDto): Promise<TokensDto> {
+  async login(authCredentialsDto: AuthCredentialsDto): Promise<TokensDto | never> {
     const { username, fingerprint } = authCredentialsDto;
 
     if (!username) {
@@ -51,7 +51,7 @@ export class AuthService {
 
   async refresh(
     refreshCredentialsDto: RefreshCredentialsDto,
-  ): Promise<TokensDto> {
+  ): Promise<TokensDto | never> {
     const { refreshToken, fingerprint } = refreshCredentialsDto;
 
     let username: string;

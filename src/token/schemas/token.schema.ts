@@ -1,9 +1,12 @@
 import {
-  Prop, raw, Schema, SchemaFactory,
+  raw,
+  Prop,
+  Schema,
+  SchemaFactory,
 } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-import { IToken } from '../token.interface';
+import type { IToken } from '../token.interface';
 import { UserSchema } from '../../user/schemas/user.schema';
 
 @Schema()

@@ -1,11 +1,8 @@
-import { Types } from 'mongoose';
+import type { Types } from 'mongoose';
 
 export interface IToken {
   _id?: Types.ObjectId;
-
-  refreshToken: string;
-
   fingerprint: string;
-
+  refreshToken: string;
   userId: Types.ObjectId;
 }
