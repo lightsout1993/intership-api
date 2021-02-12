@@ -32,6 +32,7 @@
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.3.2",
     "class-validator": "^0.13.1",
+    "lodash.omit": "^4.5.0",
     "mongoose": "^5.11.14",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",

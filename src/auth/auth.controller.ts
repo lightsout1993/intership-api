@@ -13,22 +13,22 @@ export class AuthController {
 
   @Post('register')
   async register(
-    @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
+    @Body(ValidationPipe) authCredentials: AuthCredentialsDto,
   ): Promise<TokensDto> {
-    return this.authService.register(authCredentialsDto);
+    return this.authService.register(authCredentials);
   }
 
   @Post('login')
   async login(
-    @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
+    @Body(ValidationPipe) authCredentials: AuthCredentialsDto,
   ): Promise<TokensDto> {
-    return this.authService.login(authCredentialsDto);
+    return this.authService.login(authCredentials);
   }
 
   @Post('refresh')
   async refresh(
-    @Body(ValidationPipe) refreshCredentialsDto: RefreshCredentialsDto,
+    @Body(ValidationPipe) refreshCredentials: RefreshCredentialsDto,
   ): Promise<TokensDto> {
-    return this.authService.refresh(refreshCredentialsDto);
+    return this.authService.refresh(refreshCredentials);
   }
 }

@@ -5,7 +5,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 
-export class ArtistCredentialsDto {
+export class PaintingCredentialsDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
@@ -13,8 +13,5 @@ export class ArtistCredentialsDto {
   name: string;
 
   @MaxLength(255)
-  yearsOfLife: string;
-
-  @MaxLength(255)
-  description: string;
+  yearOfCreation: string;
 }

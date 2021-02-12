@@ -9,13 +9,13 @@ import { AuthController } from './auth.controller';
 import { TokenModule } from '../token/token.module';
 
 @Module({
+  providers: [AuthService],
+  controllers: [AuthController],
   imports: [
     UserModule,
     TokenModule,
     JwtModule.registerAsync(JWTProvider),
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
-  providers: [AuthService],
-  controllers: [AuthController],
 })
 export class AuthModule {}

@@ -16,10 +16,10 @@ export class AuthService {
     private readonly tokenService: TokenService,
   ) {}
 
-  async register(authCredentialsDto: AuthCredentialsDto): Promise<TokensDto> {
-    const { username, fingerprint } = authCredentialsDto;
+  async register(authCredentials: AuthCredentialsDto): Promise<TokensDto> {
+    const { username, fingerprint } = authCredentials;
 
-    const user = await this.userService.register(authCredentialsDto);
+    const user = await this.userService.register(authCredentials);
     const tokens: TokensDto = this.createTokens({ username });
 
     return await this.tokenService.create(
@@ -29,16 +29,14 @@ export class AuthService {
     );
   }
 
-  async login(authCredentialsDto: AuthCredentialsDto): Promise<TokensDto | never> {
-    const { username, fingerprint } = authCredentialsDto;
+  async login(authCredentials: AuthCredentialsDto): Promise<TokensDto | never> {
+    const { username, fingerprint } = authCredentials;
 
     if (!username) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const user = await this.userService.validateUserPassword(
-      authCredentialsDto,
-    );
+    const user = await this.userService.validateUserPassword(authCredentials);
 
     const tokens: TokensDto = this.createTokens({ username });
 
@@ -50,9 +48,9 @@ export class AuthService {
   }
 
   async refresh(
-    refreshCredentialsDto: RefreshCredentialsDto,
+    refreshCredentials: RefreshCredentialsDto,
   ): Promise<TokensDto | never> {
-    const { refreshToken, fingerprint } = refreshCredentialsDto;
+    const { refreshToken, fingerprint } = refreshCredentials;
 
     let username: string;
     try {
@@ -63,9 +61,7 @@ export class AuthService {
       );
     }
 
-    const token = await this.tokenService.check(
-      refreshCredentialsDto,
-    );
+    const token = await this.tokenService.check(refreshCredentials);
 
     if (!token) {
       throw new UnauthorizedException('Please, login. Token not found');
@@ -79,7 +75,7 @@ export class AuthService {
 
   private createTokens(jwtPayload: JwtPayload): TokensDto {
     return {
-      accessToken: this.jwtService.sign(jwtPayload),
+      accessToken: this.jwtService.sign(jwtPayload, { expiresIn: '6h' }),
       refreshToken: this.jwtService.sign(jwtPayload, { expiresIn: '60d' }),
     };
   }

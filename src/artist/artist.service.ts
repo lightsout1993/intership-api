@@ -1,7 +1,10 @@
-import { Model, Types } from 'mongoose';
 import {
-  BadRequestException, Injectable, NotFoundException,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
+import omit from 'lodash.omit';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 import { IArtist } from './artist.interface';
@@ -14,11 +17,11 @@ export class ArtistService {
   }
 
   async findAll(): Promise<IArtist[]> {
-    return this.ArtistModel.find();
+    return this.ArtistModel.find(null, { paintings: false });
   }
 
   async findOne(_id: string): Promise<IArtist | never> {
-    const artist = await this.ArtistModel.findOne({ _id });
+    const artist = await this.ArtistModel.findOne({ _id }, { paintings: false });
 
     if (!artist) ArtistService.throwNotFoundException();
 
@@ -26,34 +29,34 @@ export class ArtistService {
   }
 
   async create(
-    authCredentialsDto: ArtistCredentialsDto,
+    artistCredentials: ArtistCredentialsDto,
   ): Promise<IArtist | never> {
-    let artist = await this.findArtistByName(authCredentialsDto.name);
+    let artist = await this.findArtistByName(artistCredentials.name);
 
     if (artist) ArtistService.throwBadRequestException();
 
-    artist = new this.ArtistModel(authCredentialsDto);
+    artist = new this.ArtistModel(artistCredentials);
     await artist.save();
 
-    return artist;
+    return omit(artist, 'paintings');
   }
 
   async update(
     _id: string,
-    authCredentialsDto: Partial<IArtist | never>,
-  ): Promise<IArtist> {
-    const artist = await this.findArtistByName(authCredentialsDto.name);
+    artistCredentials: Partial<IArtist>,
+  ): Promise<IArtist | never> {
+    const artist = await this.findArtistByName(artistCredentials.name);
 
     if (artist && artist.id !== _id) ArtistService.throwBadRequestException();
 
     const { n: matchedCount } = await this.ArtistModel.updateOne(
       { _id },
-      { $set: authCredentialsDto },
+      { $set: artistCredentials },
     );
 
     if (matchedCount === 0) ArtistService.throwNotFoundException();
 
-    return this.ArtistModel.findOne({ _id });
+    return this.ArtistModel.findOne({ _id }, { paintings: false });
   }
 
   async deleteOne(_id: string): Promise<Types.ObjectId | never> {
