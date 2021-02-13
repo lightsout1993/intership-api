@@ -4,5 +4,4 @@ export interface IToken {
   _id?: Types.ObjectId;
   fingerprint: string;
   refreshToken: string;
-  userId: Types.ObjectId;
 }

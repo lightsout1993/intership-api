@@ -1,7 +1,8 @@
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import { IUser } from '../user.interface';
+import { Token } from '../../token/schemas/token.schema';
 
 @Schema()
 export class User extends Document implements IUser {
@@ -13,6 +14,9 @@ export class User extends Document implements IUser {
 
   @Prop()
   password: string;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Token' }] })
+  tokens: Token[]
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

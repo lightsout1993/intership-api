@@ -21,7 +21,7 @@ export class ArtistService {
   }
 
   async findOne(_id: string): Promise<IArtist | never> {
-    const artist = await this.ArtistModel.findOne({ _id }, { paintings: false });
+    const artist = await this.ArtistModel.findOne({ _id });
 
     if (!artist) ArtistService.throwNotFoundException();
 

@@ -22,11 +22,16 @@ export class AuthService {
     const user = await this.userService.register(authCredentials);
     const tokens: TokensDto = this.createTokens({ username });
 
-    return await this.tokenService.create(
+    const { token, tokensDto } = await this.tokenService.create(
       user,
       tokens,
       fingerprint,
     );
+
+    await user.updateOne({ $push: { tokens: token } });
+    await user.save();
+
+    return tokensDto;
   }
 
   async login(authCredentials: AuthCredentialsDto): Promise<TokensDto | never> {
@@ -40,11 +45,13 @@ export class AuthService {
 
     const tokens: TokensDto = this.createTokens({ username });
 
-    return await this.tokenService.create(
+    const { tokensDto } = await this.tokenService.create(
       user,
       tokens,
       fingerprint,
     );
+
+    return tokensDto;
   }
 
   async refresh(

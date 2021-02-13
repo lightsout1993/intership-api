@@ -36,9 +36,8 @@ export class PaintingController {
   @Get(':id')
   async findOne(
     @Param('id') id: string,
-    @Param('artistId') artistId: string,
   ): Promise<IPainting | never> {
-    return this.paintingService.findOne(artistId, id);
+    return this.paintingService.findOne(id);
   }
 
   @Put(':id')

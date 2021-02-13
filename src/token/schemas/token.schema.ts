@@ -16,8 +16,8 @@ export class Token extends Document implements IToken {
   @Prop()
   fingerprint: string;
 
-  @Prop({ type: Types.ObjectId, ref: User.name })
-  userId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  user: User;
 }
 
 export const TokenSchema = SchemaFactory.createForClass(Token);

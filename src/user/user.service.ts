@@ -11,16 +11,16 @@ import { AuthCredentialsDto } from '../auth/dto/auth-credentials.dto';
 export class UserService {
   constructor(@InjectModel(User.name) private readonly UserModel: Model<User>) {}
 
-  async create(createUserDto: IUser): Promise<IUser> {
+  async create(createUserDto: IUser): Promise<User> {
     try {
-      const createdUser = new this.UserModel(createUserDto);
-      return await createdUser.save();
+      const user = new this.UserModel(createUserDto);
+      return await user.save();
     } catch (error) {
       throw new InternalServerErrorException();
     }
   }
 
-  async register(authCredentialsDto: AuthCredentialsDto): Promise<IUser> {
+  async register(authCredentialsDto: AuthCredentialsDto): Promise<User> {
     const { username, password } = authCredentialsDto;
 
     if (await this.findOne(username)) {

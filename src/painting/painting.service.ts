@@ -20,12 +20,12 @@ export class PaintingService {
   ) {}
 
   async findAll(artistId: string): Promise<IPainting[]> {
-    const { _id } = await this.ArtistModel.findOne({ _id: artistId }).exec();
-    return this.PaintingModel.find({ artist: _id }, { artist: false });
+    const { _id: artist } = await this.ArtistModel.findOne({ _id: artistId }).exec();
+    return this.PaintingModel.find({ artist }, { artist: false });
   }
 
-  async findOne(artistId: string, _id: string): Promise<IPainting | never> {
-    const painting = await this.PaintingModel.findOne({ _id, artistId });
+  async findOne(_id: string): Promise<IPainting | never> {
+    const painting = await this.PaintingModel.findOne({ _id });
 
     if (!painting) PaintingService.throwNotFoundException();
 
@@ -63,7 +63,7 @@ export class PaintingService {
     if (painting && painting.id !== _id) PaintingService.throwBadRequestException();
 
     const { n: matchedCount } = await this.PaintingModel.updateOne(
-      { _id, artistId },
+      { _id },
       { $set: authCredentialsDto },
     );
 
@@ -81,7 +81,8 @@ export class PaintingService {
   }
 
   private async findPaintingByName(artistId: string, name: string) {
-    return await this.PaintingModel.findOne({ artistId, name }).exec();
+    const { _id: artist } = await this.ArtistModel.findOne({ _id: artistId }).exec();
+    return await this.PaintingModel.findOne({ artist, name }).exec();
   }
 
   private static throwNotFoundException(): never {
