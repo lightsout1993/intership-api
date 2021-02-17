@@ -2,6 +2,8 @@
 /dist
 /node_modules
 /.env
+/storage
+/public
 
 # Logs
 logs

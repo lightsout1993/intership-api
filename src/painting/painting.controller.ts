@@ -6,13 +6,15 @@ import {
   Param,
   Delete,
   Controller,
-  ValidationPipe,
+  ValidationPipe, UseInterceptors, UploadedFile,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { IPainting } from './painting.interface';
 import { PaintingService } from './painting.service';
 import { ArtistCredentialsDto } from '../artist/dto/artist-credentials.dto';
 import { PaintingCredentialsDto } from './dto/painting-credentials.dto';
+import ImageDto from "../image/dto/image.dto";
 
 @Controller('artists/:artistId/paintings')
 export class PaintingController {
@@ -26,11 +28,13 @@ export class PaintingController {
   }
 
   @Post()
+  @UseInterceptors(FileInterceptor('image'))
   async create(
+    @UploadedFile() image: ImageDto,
     @Param('artistId') artistId: string,
     @Body(ValidationPipe) paintingCredentials: PaintingCredentialsDto,
   ): Promise<IPainting | never> {
-    return this.paintingService.create(artistId, paintingCredentials);
+    return this.paintingService.create(artistId, paintingCredentials, image);
   }
 
   @Get(':id')
@@ -41,12 +45,14 @@ export class PaintingController {
   }
 
   @Put(':id')
+  @UseInterceptors(FileInterceptor('image'))
   async update(
     @Param('id') id: string,
     @Param('artistId') artistId: string,
-    @Body(ValidationPipe) artistCredentials: Partial<ArtistCredentialsDto>,
+    @Body(ValidationPipe) paintingCredentials: Partial<PaintingCredentialsDto>,
+    @UploadedFile() image?: ImageDto,
   ): Promise<IPainting | never> {
-    return this.paintingService.update(artistId, id, artistCredentials);
+    return this.paintingService.update(artistId, id, paintingCredentials, image);
   }
 
   @Delete(':id')

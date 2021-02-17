@@ -1,4 +1,6 @@
+import { join } from 'path';
 import { Module } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -13,6 +15,9 @@ import { PaintingModule } from './painting/painting.module';
     ArtistModule,
     DatabaseModule,
     PaintingModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
   ],
   providers: [AppService],
   controllers: [AppController],

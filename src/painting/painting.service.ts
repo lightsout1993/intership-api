@@ -7,43 +7,40 @@ import omit from 'lodash.omit';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
+import ImageDto from '../image/dto/image.dto';
 import { IPainting } from './painting.interface';
 import { Painting } from './schemas/painting.schema';
+import { ImageService } from '../image/image.service';
+import { Image } from '../image/schemas/image.schema';
 import { Artist } from '../artist/schemas/artist.schema';
 import { PaintingCredentialsDto } from './dto/painting-credentials.dto';
 
 @Injectable()
 export class PaintingService {
   constructor(
+    private readonly imageService: ImageService,
     @InjectModel(Artist.name) private readonly ArtistModel: Model<Artist>,
     @InjectModel(Painting.name) private readonly PaintingModel: Model<Painting>,
   ) {}
 
-  async findAll(artistId: string): Promise<IPainting[]> {
-    const { _id: artist } = await this.ArtistModel.findOne({ _id: artistId }).exec();
-    return this.PaintingModel.find({ artist }, { artist: false });
-  }
-
-  async findOne(_id: string): Promise<IPainting | never> {
-    const painting = await this.PaintingModel.findOne({ _id });
-
-    if (!painting) PaintingService.throwNotFoundException();
-
-    return omit(painting, 'artist');
-  }
-
   async create(
     artistId: string,
     paintingCredentials: PaintingCredentialsDto,
+    image: ImageDto,
   ): Promise<IPainting | never> {
     let painting = await this.findPaintingByName(artistId, paintingCredentials.name);
 
     if (painting) PaintingService.throwBadRequestException();
 
+    const paintingId = Types.ObjectId();
+
+    const imageModel: Image = await this.imageService.create(image, paintingId.toHexString());
+
     painting = new this.PaintingModel({
       ...paintingCredentials,
+      _id: paintingId,
+      image: imageModel,
       artist: Types.ObjectId(artistId),
-      _id: Types.ObjectId(paintingCredentials.name),
     });
 
     await painting.save();
@@ -53,18 +50,44 @@ export class PaintingService {
     return omit(painting, 'artist');
   }
 
+  async findAll(artistId: string): Promise<IPainting[]> {
+    const { _id: artist } = await this.ArtistModel.findOne({ _id: artistId }).exec();
+
+    return this.PaintingModel
+      .find({ artist }, { artist: false })
+      .populate('image').exec();
+  }
+
+  async findOne(_id: string): Promise<IPainting | never> {
+    const painting = await this.PaintingModel
+      .findOne({ _id }, { artist: false })
+      .populate('image').exec();
+
+    if (!painting) PaintingService.throwNotFoundException();
+
+    return painting;
+  }
+
   async update(
     artistId: string,
     _id: string,
-    authCredentialsDto: Partial<PaintingCredentialsDto>,
+    paintingCredentials: Partial<PaintingCredentialsDto>,
+    image?: ImageDto,
   ): Promise<IPainting | never> {
-    const painting = await this.findPaintingByName(artistId, authCredentialsDto.name);
+    const painting = await this.findPaintingByName(artistId, paintingCredentials.name);
 
     if (painting && painting.id !== _id) PaintingService.throwBadRequestException();
 
+    const $set: Partial<PaintingCredentialsDto & { image: Image }> = paintingCredentials;
+
+    if (image) {
+      await ImageService.remove(_id);
+      $set.image = await this.imageService.create(image, _id);
+    }
+
     const { n: matchedCount } = await this.PaintingModel.updateOne(
       { _id },
-      { $set: authCredentialsDto },
+      { $set },
     );
 
     if (matchedCount === 0) PaintingService.throwNotFoundException();
@@ -73,9 +96,12 @@ export class PaintingService {
   }
 
   async deleteOne(_id: string): Promise<Types.ObjectId | never> {
-    const { deletedCount } = await this.PaintingModel.deleteOne({ _id });
+    const painting = await this.PaintingModel.findOne({ _id }).exec();
 
-    if (deletedCount === 0) PaintingService.throwNotFoundException();
+    if (!painting) PaintingService.throwNotFoundException();
+
+    await painting.remove();
+    await ImageService.remove(_id);
 
     return Types.ObjectId(_id);
   }
