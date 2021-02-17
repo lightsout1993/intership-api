@@ -6,15 +6,17 @@ import {
   Param,
   Delete,
   Controller,
-  ValidationPipe, UseInterceptors, UploadedFile,
+  UploadedFile,
+  ValidationPipe,
+  UseInterceptors, UnprocessableEntityException,
 } from '@nestjs/common';
-import { Types } from 'mongoose';
+import type { Types } from 'mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { IPainting } from './painting.interface';
+
+import type ImageDto from '../image/dto/image.dto';
 import { PaintingService } from './painting.service';
-import { ArtistCredentialsDto } from '../artist/dto/artist-credentials.dto';
-import { PaintingCredentialsDto } from './dto/painting-credentials.dto';
-import ImageDto from "../image/dto/image.dto";
+import type { IPainting } from './painting.interface';
+import type { PaintingCredentialsDto } from './dto/painting-credentials.dto';
 
 @Controller('artists/:artistId/paintings')
 export class PaintingController {
@@ -30,10 +32,14 @@ export class PaintingController {
   @Post()
   @UseInterceptors(FileInterceptor('image'))
   async create(
-    @UploadedFile() image: ImageDto,
     @Param('artistId') artistId: string,
     @Body(ValidationPipe) paintingCredentials: PaintingCredentialsDto,
+    @UploadedFile() image: ImageDto,
   ): Promise<IPainting | never> {
+    if (!image) {
+      throw new UnprocessableEntityException('Image is required');
+    }
+
     return this.paintingService.create(artistId, paintingCredentials, image);
   }
 

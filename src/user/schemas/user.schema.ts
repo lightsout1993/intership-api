@@ -1,8 +1,8 @@
 import { Document, Types } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
-import { IUser } from '../user.interface';
-import { Token } from '../../token/schemas/token.schema';
+import type { IUser } from '../user.interface';
+import type { Token } from '../../token/schemas/token.schema';
 
 @Schema()
 export class User extends Document implements IUser {

@@ -1,4 +1,4 @@
-import { ConvertCredentials, IImage, ResizeCredentials } from './image.interface';
+import type { ConvertCredentials, IImage, ResizeCredentials } from './image.interface';
 
 const basicWidth = 500;
 const basicHeight = 400;

@@ -7,13 +7,13 @@ import omit from 'lodash.omit';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
-import ImageDto from '../image/dto/image.dto';
-import { IPainting } from './painting.interface';
+import type ImageDto from '../image/dto/image.dto';
 import { Painting } from './schemas/painting.schema';
+import type { IPainting } from './painting.interface';
 import { ImageService } from '../image/image.service';
-import { Image } from '../image/schemas/image.schema';
 import { Artist } from '../artist/schemas/artist.schema';
-import { PaintingCredentialsDto } from './dto/painting-credentials.dto';
+import type { Image } from '../image/schemas/image.schema';
+import type { PaintingCredentialsDto } from './dto/painting-credentials.dto';
 
 @Injectable()
 export class PaintingService {
@@ -47,7 +47,7 @@ export class PaintingService {
 
     await this.ArtistModel.updateOne({ _id: artistId }, { $push: { paintings: painting } });
 
-    return omit(painting, 'artist');
+    return omit(painting.toObject(), 'artist');
   }
 
   async findAll(artistId: string): Promise<IPainting[]> {
@@ -85,10 +85,7 @@ export class PaintingService {
       $set.image = await this.imageService.create(image, _id);
     }
 
-    const { n: matchedCount } = await this.PaintingModel.updateOne(
-      { _id },
-      { $set },
-    );
+    const { n: matchedCount } = await this.PaintingModel.updateOne({ _id }, { $set });
 
     if (matchedCount === 0) PaintingService.throwNotFoundException();
 

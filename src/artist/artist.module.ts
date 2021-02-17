@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { ArtistService } from './artist.service';
+import { ImageModule } from '../image/image.module';
 import { ArtistController } from './artist.controller';
 import { Artist, ArtistSchema } from './schemas/artist.schema';
 import { Painting, PaintingSchema } from '../painting/schemas/painting.schema';
@@ -10,6 +11,7 @@ import { Painting, PaintingSchema } from '../painting/schemas/painting.schema';
   providers: [ArtistService],
   controllers: [ArtistController],
   imports: [
+    ImageModule,
     MongooseModule.forFeature([{ name: Artist.name, schema: ArtistSchema }]),
     MongooseModule.forFeature([{ name: Painting.name, schema: PaintingSchema }]),
   ],

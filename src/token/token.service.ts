@@ -2,12 +2,12 @@ import { Model, Types } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
-import { IToken } from './token.interface';
-import { IUser } from '../user/user.interface';
 import { Token } from './schemas/token.schema';
-import { TokensDto } from '../auth/dto/tokens.dto';
-import { RefreshCredentialsDto } from '../auth/dto/refresh-credentials.dto';
+import type { IToken } from './token.interface';
 import { User } from '../user/schemas/user.schema';
+import type { IUser } from '../user/user.interface';
+import type { TokensDto } from '../auth/dto/tokens.dto';
+import type { RefreshCredentialsDto } from '../auth/dto/refresh-credentials.dto';
 
 @Injectable()
 export class TokenService {

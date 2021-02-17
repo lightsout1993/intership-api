@@ -1,18 +1,18 @@
+import fs from 'fs';
 import { Model } from 'mongoose';
 import sharp, { Sharp } from 'sharp';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
-import * as fs from 'fs';
 import {
   createPublicPaths,
   createStoragePaths,
   getResizeCredentials,
   getConvertCredentials,
 } from './utils.image';
-import ImageDto from './dto/image.dto';
+import type ImageDto from './dto/image.dto';
 import { Image } from './schemas/image.schema';
-import { IImage, Images } from './image.interface';
+import type { IImage, Images } from './image.interface';
 
 @Injectable()
 export class ImageService {
@@ -35,11 +35,15 @@ export class ImageService {
     return image;
   }
 
-  static async remove(path: string): Promise<void> {
-    const pathDir = `storage/images/${path}`;
-    const files = await fs.promises.readdir(pathDir);
-    await Promise.all(files.map(async (file) => await fs.promises.unlink(`${pathDir}/${file}`)));
-    await fs.promises.rmdir(pathDir);
+  static async remove(path: string): Promise<void | never> {
+    try {
+      const pathDir = `storage/images/${path}`;
+      const files = await fs.promises.readdir(pathDir);
+      await Promise.all(files.map(async (file) => await fs.promises.unlink(`${pathDir}/${file}`)));
+      await fs.promises.rmdir(pathDir);
+    } catch (e) {
+      console.warn(e);
+    }
   }
 
   private static async saveFiles(

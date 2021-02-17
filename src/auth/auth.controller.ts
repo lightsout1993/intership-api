@@ -3,9 +3,9 @@ import {
 } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
-import { TokensDto } from './dto/tokens.dto';
-import { AuthCredentialsDto } from './dto/auth-credentials.dto';
-import { RefreshCredentialsDto } from './dto/refresh-credentials.dto';
+import type { TokensDto } from './dto/tokens.dto';
+import type { AuthCredentialsDto } from './dto/auth-credentials.dto';
+import type { RefreshCredentialsDto } from './dto/refresh-credentials.dto';
 
 @Controller('auth')
 export class AuthController {

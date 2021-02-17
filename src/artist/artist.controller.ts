@@ -6,13 +6,17 @@ import {
   Param,
   Delete,
   Controller,
+  UploadedFile,
   ValidationPipe,
+  UseInterceptors,
 } from '@nestjs/common';
-import { Types } from 'mongoose';
+import type { Types } from 'mongoose';
+import { FileInterceptor } from '@nestjs/platform-express';
 
-import { IArtist } from './artist.interface';
 import { ArtistService } from './artist.service';
-import { ArtistCredentialsDto } from './dto/artist-credentials.dto';
+import type { IArtist } from './artist.interface';
+import type ImageDto from '../image/dto/image.dto';
+import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
 
 @Controller('artists')
 export class ArtistController {
@@ -26,10 +30,12 @@ export class ArtistController {
   }
 
   @Post()
+  @UseInterceptors(FileInterceptor('avatar'))
   async create(
     @Body(ValidationPipe) artistCredentials: ArtistCredentialsDto,
+    @UploadedFile() avatar?: ImageDto,
   ): Promise<IArtist | never> {
-    return this.artistService.create(artistCredentials);
+    return this.artistService.create(artistCredentials, avatar);
   }
 
   @Get(':id')
@@ -38,11 +44,13 @@ export class ArtistController {
   }
 
   @Put(':id')
+  @UseInterceptors(FileInterceptor('avatar'))
   async update(
     @Param('id') id: string,
     @Body(ValidationPipe) artistCredentials: Partial<ArtistCredentialsDto>,
+    @UploadedFile() avatar?: ImageDto,
   ): Promise<IArtist | never> {
-    return this.artistService.update(id, artistCredentials);
+    return this.artistService.update(id, artistCredentials, avatar);
   }
 
   @Delete(':id')

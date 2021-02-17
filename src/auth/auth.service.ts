@@ -1,12 +1,12 @@
 import { JwtService } from '@nestjs/jwt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
-import { TokensDto } from './dto/tokens.dto';
+import type { TokensDto } from './dto/tokens.dto';
 import { UserService } from '../user/user.service';
 import { TokenService } from '../token/token.service';
-import { JwtPayload } from './jwt/jwt-payload.interface';
-import { AuthCredentialsDto } from './dto/auth-credentials.dto';
-import { RefreshCredentialsDto } from './dto/refresh-credentials.dto';
+import type { JwtPayload } from './jwt/jwt-payload.interface';
+import type { AuthCredentialsDto } from './dto/auth-credentials.dto';
+import type { RefreshCredentialsDto } from './dto/refresh-credentials.dto';
 
 @Injectable()
 export class AuthService {

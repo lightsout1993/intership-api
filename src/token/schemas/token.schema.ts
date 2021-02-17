@@ -6,7 +6,7 @@ import {
 import { Document, Types } from 'mongoose';
 
 import type { IToken } from '../token.interface';
-import { User } from '../../user/schemas/user.schema';
+import type { User } from '../../user/schemas/user.schema';
 
 @Schema()
 export class Token extends Document implements IToken {
