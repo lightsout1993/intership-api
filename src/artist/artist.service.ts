@@ -11,6 +11,7 @@ import { Artist } from './schemas/artist.schema';
 import type { IArtist } from './artist.interface';
 import type ImageDto from '../image/dto/image.dto';
 import { ImageService } from '../image/image.service';
+import type { User } from '../user/schemas/user.schema';
 import type { Image } from '../image/schemas/image.schema';
 import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
 
@@ -19,16 +20,15 @@ export class ArtistService {
   constructor(
     private readonly imageService: ImageService,
     @InjectModel(Artist.name) private readonly ArtistModel: Model<Artist>,
-  ) {
-  }
+  ) { }
 
-  async findAll(): Promise<IArtist[]> {
-    return this.ArtistModel.find(null, { paintings: false })
+  async findAll(user: User): Promise<IArtist[]> {
+    return this.ArtistModel.find({ user }, { paintings: false, user: false })
       .populate('avatar').exec();
   }
 
   async findOne(_id: string): Promise<IArtist | never> {
-    const artist = await this.ArtistModel.findOne({ _id })
+    const artist = await this.ArtistModel.findOne({ _id }, { user: false })
       .populate('avatar').populate('paintings', '-artist').exec();
 
     if (!artist) ArtistService.throwNotFoundException();
@@ -37,18 +37,20 @@ export class ArtistService {
   }
 
   async create(
+    user: User,
     artistCredentials: ArtistCredentialsDto,
     avatar?: ImageDto,
   ): Promise<IArtist | never> {
-    let artist = await this.findArtistByName(artistCredentials.name);
+    let artist = await this.findArtistByName(user, artistCredentials.name);
 
     if (artist) ArtistService.throwBadRequestException();
 
     const artistId = Types.ObjectId();
 
     const docArtist = {
-      _id: artistId,
       ...artistCredentials,
+      user,
+      _id: artistId,
     } as ArtistCredentialsDto & { _id: Types.ObjectId, avatar?: Image };
 
     if (avatar) {
@@ -58,15 +60,16 @@ export class ArtistService {
     artist = new this.ArtistModel(docArtist);
     await artist.save();
 
-    return omit(artist.toObject(), 'paintings');
+    return omit(artist.toObject(), ['paintings', 'user']);
   }
 
   async update(
+    user: User,
     _id: string,
     artistCredentials: Partial<ArtistCredentialsDto>,
     avatar?: ImageDto,
   ): Promise<IArtist | never> {
-    const artist = await this.findArtistByName(artistCredentials.name);
+    const artist = await this.findArtistByName(user, artistCredentials.name);
 
     if (artist && artist.id !== _id) ArtistService.throwBadRequestException();
 
@@ -81,7 +84,7 @@ export class ArtistService {
 
     if (matchedCount === 0) ArtistService.throwNotFoundException();
 
-    return this.ArtistModel.findOne({ _id }, { paintings: false })
+    return this.ArtistModel.findOne({ _id }, { paintings: false, user: false })
       .populate('avatar').exec();
   }
 
@@ -96,8 +99,8 @@ export class ArtistService {
     return Types.ObjectId(_id);
   }
 
-  private async findArtistByName(name) {
-    return await this.ArtistModel.findOne({ name }).populate('avatar').exec();
+  private async findArtistByName(user: User, name: string) {
+    return await this.ArtistModel.findOne({ name, user }).exec();
   }
 
   private static throwNotFoundException(): never {

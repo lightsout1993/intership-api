@@ -5,6 +5,7 @@ import {
   Post,
   Param,
   Delete,
+  UseGuards,
   Controller,
   UploadedFile,
   ValidationPipe,
@@ -16,6 +17,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ArtistService } from './artist.service';
 import type { IArtist } from './artist.interface';
 import type ImageDto from '../image/dto/image.dto';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { User } from '../internal/decorators/user.decorator';
+import type { User as UserModel } from '../user/schemas/user.schema';
 import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
 
 @Controller('artists')
@@ -25,35 +29,42 @@ export class ArtistController {
   ) {}
 
   @Get()
-  async findAll(): Promise<IArtist[]> {
-    return this.artistService.findAll();
+  @UseGuards(JwtAuthGuard)
+  async findAll(@User() user: UserModel): Promise<IArtist[]> {
+    return this.artistService.findAll(user);
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('avatar'))
   async create(
+    @User() user: UserModel,
     @Body(ValidationPipe) artistCredentials: ArtistCredentialsDto,
     @UploadedFile() avatar?: ImageDto,
   ): Promise<IArtist | never> {
-    return this.artistService.create(artistCredentials, avatar);
+    return this.artistService.create(user, artistCredentials, avatar);
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string): Promise<IArtist | never> {
     return this.artistService.findOne(id);
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('avatar'))
   async update(
+    @User() user: UserModel,
     @Param('id') id: string,
     @Body(ValidationPipe) artistCredentials: Partial<ArtistCredentialsDto>,
     @UploadedFile() avatar?: ImageDto,
   ): Promise<IArtist | never> {
-    return this.artistService.update(id, artistCredentials, avatar);
+    return this.artistService.update(user, id, artistCredentials, avatar);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   async remove(
     @Param('id') id: string,
   ): Promise<Types.ObjectId | never> {

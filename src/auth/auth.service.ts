@@ -3,6 +3,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import type { TokensDto } from './dto/tokens.dto';
 import { UserService } from '../user/user.service';
+import type { IUser } from '../user/user.interface';
 import { TokenService } from '../token/token.service';
 import type { JwtPayload } from './jwt/jwt-payload.interface';
 import type { AuthCredentialsDto } from './dto/auth-credentials.dto';
@@ -78,6 +79,15 @@ export class AuthService {
     await this.tokenService.update(token._id, tokens, fingerprint);
 
     return tokens;
+  }
+
+  async validateUser(payload: JwtPayload): Promise<IUser> {
+    const { username } = payload;
+    const user = await this.userService.findOne(username);
+
+    if (!user) throw new UnauthorizedException('User is not authorized!');
+
+    return user;
   }
 
   private createTokens(jwtPayload: JwtPayload): TokensDto {
