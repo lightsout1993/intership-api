@@ -96,8 +96,10 @@ export class ArtistService {
 
     if (matchedCount === 0) ArtistService.throwNotFoundException();
 
-    return this.ArtistModel.findOne({ _id }, { paintings: false, user: false })
-      .populate('avatar').exec();
+    return this.ArtistModel
+      .findOne({ _id }, { paintings: false, user: false })
+      .populate('avatar')
+      .exec();
   }
 
   async deleteOne(_id: string): Promise<Types.ObjectId | never> {
