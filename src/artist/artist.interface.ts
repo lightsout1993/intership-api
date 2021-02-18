@@ -6,3 +6,14 @@ export interface IArtist {
   description: string;
   yearsOfLife: string;
 }
+
+interface Meta {
+  count: number;
+  perPage: number;
+  pageNumber: number;
+}
+
+export interface IArtistsResponse {
+  meta: Meta;
+  data: IArtist[];
+}

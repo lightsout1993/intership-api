@@ -4,11 +4,11 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import omit from 'lodash.omit';
-import { Model, Types } from 'mongoose';
+import { DocumentQuery, Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 import { Artist } from './schemas/artist.schema';
-import type { IArtist } from './artist.interface';
+import type { IArtist, IArtistsResponse } from './artist.interface';
 import type ImageDto from '../image/dto/image.dto';
 import { ImageService } from '../image/image.service';
 import type { User } from '../user/schemas/user.schema';
@@ -20,16 +20,28 @@ export class ArtistService {
   constructor(
     private readonly imageService: ImageService,
     @InjectModel(Artist.name) private readonly ArtistModel: Model<Artist>,
-  ) { }
+  ) {}
 
-  async findAll(user: User): Promise<IArtist[]> {
-    return this.ArtistModel.find({ user }, { paintings: false, user: false })
-      .populate('avatar').exec();
+  async findAll(user: User, perPage?: number, pageNumber?: number): Promise<IArtistsResponse> {
+    const artists = this.ArtistModel.find(
+      { user: user._id },
+      { paintings: false, user: false },
+    );
+
+    const count: number = await artists.count().exec();
+
+    const artistsPagination = ArtistService.pagination(artists, pageNumber, perPage);
+    const data: IArtist[] = await artistsPagination.populate('avatar').exec();
+
+    return { data, meta: { count, perPage, pageNumber } };
   }
 
   async findOne(_id: string): Promise<IArtist | never> {
-    const artist = await this.ArtistModel.findOne({ _id }, { user: false })
-      .populate('avatar').populate('paintings', '-artist').exec();
+    const artist = await this.ArtistModel
+      .findOne({ _id }, { user: false })
+      .populate('avatar')
+      .populate('paintings', '-artist')
+      .exec();
 
     if (!artist) ArtistService.throwNotFoundException();
 
@@ -49,8 +61,8 @@ export class ArtistService {
 
     const docArtist = {
       ...artistCredentials,
-      user,
       _id: artistId,
+      user: user._id,
     } as ArtistCredentialsDto & { _id: Types.ObjectId, avatar?: Image };
 
     if (avatar) {
@@ -99,8 +111,18 @@ export class ArtistService {
     return Types.ObjectId(_id);
   }
 
+  private static pagination(
+    artists: DocumentQuery<Artist[], Artist>,
+    pageNumber: number,
+    nPerPage: number,
+  ): DocumentQuery<Artist[], Artist> {
+    return pageNumber && nPerPage
+      ? artists.skip((pageNumber - 1) * nPerPage).limit(nPerPage)
+      : artists;
+  }
+
   private async findArtistByName(user: User, name: string) {
-    return await this.ArtistModel.findOne({ name, user }).exec();
+    return await this.ArtistModel.findOne({ name, user: user._id }).exec();
   }
 
   private static throwNotFoundException(): never {

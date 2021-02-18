@@ -4,18 +4,20 @@ import {
   Body,
   Post,
   Param,
+  Query,
   Delete,
   UseGuards,
   Controller,
+  ParseIntPipe,
   UploadedFile,
   ValidationPipe,
-  UseInterceptors,
+  UseInterceptors, DefaultValuePipe,
 } from '@nestjs/common';
 import type { Types } from 'mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 import { ArtistService } from './artist.service';
-import type { IArtist } from './artist.interface';
+import type { IArtist, IArtistsResponse } from './artist.interface';
 import type ImageDto from '../image/dto/image.dto';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { User } from '../internal/decorators/user.decorator';
@@ -30,8 +32,12 @@ export class ArtistController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async findAll(@User() user: UserModel): Promise<IArtist[]> {
-    return this.artistService.findAll(user);
+  async findAll(
+    @User() user: UserModel,
+    @Query('perPage', new DefaultValuePipe(0), ParseIntPipe) perPage?: number,
+    @Query('pageNumber', new DefaultValuePipe(0), ParseIntPipe) pageNumber?: number,
+  ): Promise<IArtistsResponse> {
+    return this.artistService.findAll(user, perPage, pageNumber);
   }
 
   @Post()
