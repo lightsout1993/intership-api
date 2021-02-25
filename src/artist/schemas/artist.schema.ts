@@ -7,6 +7,7 @@ import { Document, Types } from 'mongoose';
 
 import type { IArtist } from '../artist.interface';
 import type { User } from '../../user/schemas/user.schema';
+import type { Genre } from '../../genre/schemas/genre.schema';
 import type { Image } from '../../image/schemas/image.schema';
 import type { Painting } from '../../painting/schemas/painting.schema';
 
@@ -14,6 +15,9 @@ import type { Painting } from '../../painting/schemas/painting.schema';
 export class Artist extends Document implements IArtist {
   @Prop()
   name: string;
+
+  @Prop()
+  country: string;
 
   @Prop()
   description: string;
@@ -26,6 +30,12 @@ export class Artist extends Document implements IArtist {
 
   @Prop({ type: Types.ObjectId, ref: 'Image' })
   avatar: Image;
+
+  @Prop({ type: Types.ObjectId, ref: 'Image' })
+  mainPainting: Image;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Genre' }] })
+  genres: Genre[];
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Painting' }] })
   paintings: Painting[];

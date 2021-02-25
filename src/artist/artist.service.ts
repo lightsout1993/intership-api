@@ -4,44 +4,84 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import omit from 'lodash.omit';
-import { DocumentQuery, Model, Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
+import type {
+  IArtist,
+  ArtistQuery,
+  IArtistsResponse,
+  IFiltersCredentials,
+  ISortingCredentials,
+  IPaginationCredentials,
+  ArtistUpdateCredentials,
+} from './artist.interface';
 import { Artist } from './schemas/artist.schema';
-import type { IArtist, IArtistsResponse } from './artist.interface';
 import type ImageDto from '../image/dto/image.dto';
+import { User } from '../user/schemas/user.schema';
 import { ImageService } from '../image/image.service';
-import type { User } from '../user/schemas/user.schema';
+import { Genre } from '../genre/schemas/genre.schema';
 import type { Image } from '../image/schemas/image.schema';
+import { Painting } from '../painting/schemas/painting.schema';
+import { PaintingService } from '../painting/painting.service';
 import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ArtistService {
   constructor(
+    private readonly userService: UserService,
     private readonly imageService: ImageService,
+    @InjectModel(Genre.name) private readonly GenreModel: Model<Genre>,
     @InjectModel(Artist.name) private readonly ArtistModel: Model<Artist>,
+    @InjectModel(Painting.name) private readonly PaintingModel: Model<Painting>,
   ) {}
 
-  async findAll(user: User, perPage?: number, pageNumber?: number): Promise<IArtistsResponse> {
+  async findAllStatic(): Promise<IArtist[]> {
+    const demoUser = await this.userService.getDemoUser();
+
+    return await this.ArtistModel
+      .find(
+        { user: demoUser },
+        { avatar: false, paintings: false, user: false },
+      )
+      .exec();
+  }
+
+  async findAll(
+    user: User,
+    filters: IFiltersCredentials,
+    sorting: ISortingCredentials,
+    pagination: IPaginationCredentials,
+  ): Promise<IArtistsResponse> {
     const artists = this.ArtistModel.find(
       { user: user._id },
       { paintings: false, user: false },
     );
-
     const count: number = await artists.count().exec();
 
-    const artistsPagination = ArtistService.pagination(artists, pageNumber, perPage);
-    const data: IArtist[] = await artistsPagination.populate('avatar').exec();
+    const artistSorting = ArtistService
+      .sort(artists, sorting);
 
-    return { data, meta: { count, perPage, pageNumber } };
+    const artistsPagination = ArtistService
+      .paginate(artistSorting, pagination);
+
+    const artistsFilteredByCountry = ArtistService
+      .filterByCountry(artistsPagination, filters.country);
+
+    const artistsFilteredByGenres = ArtistService
+      .filterByGenres(artistsFilteredByCountry, filters.genres);
+
+    const data: IArtist[] = await ArtistService.populate<Artist[]>(artistsFilteredByGenres).exec();
+
+    return { data, meta: { count, ...pagination } };
   }
 
   async findOne(_id: string): Promise<IArtist | never> {
-    const artist = await this.ArtistModel
-      .findOne({ _id }, { user: false })
-      .populate('avatar')
-      .populate('paintings', '-artist')
-      .exec();
+    const artistQuery = await this.ArtistModel
+      .findOne({ _id }, { user: false });
+
+    const artist = ArtistService.populate<Artist>(artistQuery).exec();
 
     if (!artist) ArtistService.throwNotFoundException();
 
@@ -72,7 +112,7 @@ export class ArtistService {
     artist = new this.ArtistModel(docArtist);
     await artist.save();
 
-    return omit(artist.toObject(), ['paintings', 'user']);
+    return omit(artist.toObject(), ['paintings', 'user', 'mainPainting']);
   }
 
   async update(
@@ -85,11 +125,15 @@ export class ArtistService {
 
     if (artist && artist.id !== _id) ArtistService.throwBadRequestException();
 
-    const $set: Partial<ArtistCredentialsDto & { avatar: Image }> = artistCredentials;
+    const $set: Partial<ArtistUpdateCredentials> = omit(artistCredentials, 'genres');
 
     if (avatar) {
       await ImageService.remove(_id);
       $set.avatar = await this.imageService.create(avatar, _id);
+    }
+
+    if (artistCredentials.genres.length) {
+      $set.genres = await this.GenreModel.find({ _id: { $in: artistCredentials.genres } }).exec();
     }
 
     const { n: matchedCount } = await this.ArtistModel.updateOne({ _id }, { $set });
@@ -98,7 +142,6 @@ export class ArtistService {
 
     return this.ArtistModel
       .findOne({ _id }, { paintings: false, user: false })
-      .populate('avatar')
       .exec();
   }
 
@@ -113,13 +156,55 @@ export class ArtistService {
     return Types.ObjectId(_id);
   }
 
-  private static pagination(
-    artists: DocumentQuery<Artist[], Artist>,
-    pageNumber: number,
-    nPerPage: number,
-  ): DocumentQuery<Artist[], Artist> {
-    return pageNumber && nPerPage
-      ? artists.skip((pageNumber - 1) * nPerPage).limit(nPerPage)
+  async appointMainPainting(artistId: string, _id: string): Promise<void | never> {
+    const painting = await this.PaintingModel.findOne({ _id }).exec();
+
+    if (!painting) PaintingService.throwNotFoundException();
+
+    const { n: matchedCount } = await this.ArtistModel.updateOne({ mainPainting: painting });
+
+    if (matchedCount === 0) ArtistService.throwNotFoundException();
+  }
+
+  private static populate<T>(artistQuery: ArtistQuery<T>): ArtistQuery<T> {
+    return artistQuery
+      .populate('avatar', '-artist')
+      .populate('mainPainting', '-artist');
+  }
+
+  private static filterByGenres(
+    artistsQuery: ArtistQuery<Artist[]>,
+    genres: string[],
+  ): ArtistQuery<Artist[]> {
+    return genres.length
+      ? artistsQuery.find({ genres: { $all: genres } })
+      : artistsQuery;
+  }
+
+  private static filterByCountry(
+    artistsQuery: ArtistQuery<Artist[]>,
+    country: string,
+  ): ArtistQuery<Artist[]> {
+    return country
+      ? artistsQuery.find({ country })
+      : artistsQuery;
+  }
+
+  private static paginate(
+    artistsQuery: ArtistQuery<Artist[]>,
+    { pageNumber, perPage }: IPaginationCredentials,
+  ): ArtistQuery<Artist[]> {
+    return pageNumber && perPage
+      ? artistsQuery.skip((pageNumber - 1) * perPage).limit(perPage)
+      : artistsQuery;
+  }
+
+  private static sort(
+    artists: ArtistQuery<Artist[]>,
+    { sortBy, orderBy }: ISortingCredentials,
+  ): ArtistQuery<Artist[]> {
+    return sortBy && orderBy
+      ? artists.sort({ [sortBy]: orderBy })
       : artists;
   }
 

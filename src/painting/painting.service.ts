@@ -45,7 +45,14 @@ export class PaintingService {
 
     await painting.save();
 
-    await this.ArtistModel.updateOne({ _id: artistId }, { $push: { paintings: painting } });
+    const artist = await this.ArtistModel.findOne({ _id: artistId }).exec();
+
+    if (artist.paintings.length) {
+      artist.mainPainting = painting;
+    }
+
+    await artist.updateOne({ _id: artistId }, { $push: { paintings: painting } });
+    await artist.save();
 
     return omit(painting.toObject(), 'artist');
   }
@@ -108,7 +115,7 @@ export class PaintingService {
     return await this.PaintingModel.findOne({ artist, name }).exec();
   }
 
-  private static throwNotFoundException(): never {
+  static throwNotFoundException(): never {
     throw new NotFoundException('Couldn\'t find an painting with this id');
   }
 

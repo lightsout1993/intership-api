@@ -1,8 +1,10 @@
 import {
+  IsArray,
   IsString,
   MaxLength,
   MinLength,
   IsNotEmpty,
+  IsOptional,
 } from 'class-validator';
 
 export class ArtistCredentialsDto {
@@ -17,4 +19,16 @@ export class ArtistCredentialsDto {
 
   @MaxLength(255)
   description: string;
+
+  @IsString()
+  @IsNotEmpty()
+  country: string;
+
+  @IsArray()
+  @IsOptional()
+  genres: string[];
+
+  @IsString()
+  @IsOptional()
+  mainPainting?: string;
 }

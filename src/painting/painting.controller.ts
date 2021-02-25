@@ -8,7 +8,7 @@ import {
   Controller,
   UploadedFile,
   ValidationPipe,
-  UseInterceptors, UnprocessableEntityException,
+  UseInterceptors, UnprocessableEntityException, Patch,
 } from '@nestjs/common';
 import type { Types } from 'mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';

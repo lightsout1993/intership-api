@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 
@@ -51,7 +51,13 @@ export class UserService {
     return user;
   }
 
-  async findOne(username: string): Promise<IUser> {
-    return await this.UserModel.findOne({ username });
+  async findOne(username: string): Promise<User | null> {
+    return await this.UserModel.findOne({ username }).exec();
+  }
+
+  async getDemoUser(): Promise<User> {
+    return await this.UserModel
+      .findOne({ _id: Types.ObjectId('demo') })
+      .exec();
   }
 }
