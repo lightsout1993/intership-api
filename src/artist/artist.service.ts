@@ -58,8 +58,6 @@ export class ArtistService {
       { user: user._id },
       { paintings: false, user: false },
     );
-    const count: number = await artists.count().exec();
-
     const artistSorting = ArtistService
       .sort(artists, sorting);
 
@@ -74,14 +72,14 @@ export class ArtistService {
 
     const data: IArtist[] = await ArtistService.populate<Artist[]>(artistsFilteredByGenres).exec();
 
-    return { data, meta: { count, ...pagination } };
+    return { data, meta: { count: data.length, ...pagination } };
   }
 
-  async findOne(_id: string): Promise<IArtist | never> {
+  async findOne(_id: string): Promise<Artist | never> {
     const artistQuery = await this.ArtistModel
-      .findOne({ _id }, { user: false });
+      .findOne({ _id }, { user: false })
 
-    const artist = ArtistService.populate<Artist>(artistQuery).exec();
+    const artist = await ArtistService.populate<Artist>(artistQuery).exec();
 
     if (!artist) ArtistService.throwNotFoundException();
 
@@ -133,7 +131,7 @@ export class ArtistService {
     }
 
     if (artistCredentials.genres.length) {
-      $set.genres = await this.GenreModel.find({ _id: { $in: artistCredentials.genres } }).exec();
+      $set.genres  = await this.GenreModel.find({ name: { $in: artistCredentials.genres } }).exec();
     }
 
     const { n: matchedCount } = await this.ArtistModel.updateOne({ _id }, { $set });
@@ -157,16 +155,16 @@ export class ArtistService {
   }
 
   async appointMainPainting(artistId: string, _id: string): Promise<void | never> {
-    const painting = await this.PaintingModel.findOne({ _id }).exec();
+    const mainPainting = await this.PaintingModel.findOne({ _id }).exec();
 
-    if (!painting) PaintingService.throwNotFoundException();
+    if (!mainPainting) PaintingService.throwNotFoundException();
 
-    const { n: matchedCount } = await this.ArtistModel.updateOne({ mainPainting: painting });
+    const { n: matchedCount } = await this.ArtistModel.updateOne({ mainPainting });
 
     if (matchedCount === 0) ArtistService.throwNotFoundException();
   }
 
-  private static populate<T>(artistQuery: ArtistQuery<T>): ArtistQuery<T> {
+  private static populate<T>(artistQuery): ArtistQuery<T> {
     return artistQuery
       .populate('avatar', '-artist')
       .populate('mainPainting', '-artist');

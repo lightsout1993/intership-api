@@ -31,8 +31,8 @@ export class Artist extends Document implements IArtist {
   @Prop({ type: Types.ObjectId, ref: 'Image' })
   avatar: Image;
 
-  @Prop({ type: Types.ObjectId, ref: 'Image' })
-  mainPainting: Image;
+  @Prop({ type: Types.ObjectId, ref: 'Painting' })
+  mainPainting: Painting;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Genre' }] })
   genres: Genre[];

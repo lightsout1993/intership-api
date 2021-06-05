@@ -40,4 +40,5 @@ export interface ISortingCredentials {
 
 export type ArtistQuery<T> = DocumentQuery<T, Artist>;
 
-export type ArtistUpdateCredentials = Omit<ArtistCredentialsDto, 'mainPainting'> & { genres: Genre[], avatar: Image };
+export type ArtistUpdateCredentials = Omit<ArtistCredentialsDto, 'mainPainting' | 'genres'>
+    & { genres: Genre[], avatar: Image };
