@@ -20,7 +20,7 @@ export class TokenService {
     userCredentials: IUser,
     tokensDto: TokensDto,
     fingerprint: string,
-  ): Promise<{ token: Token, tokensDto: TokensDto }> {
+  ): Promise<{ token: Token; tokensDto: TokensDto }> {
     const user = await this.UserModel.findOne(userCredentials).exec();
     const tokens = await this.TokenModel.find({ user: user._id }).exec();
 
@@ -35,9 +35,7 @@ export class TokenService {
     return { token, tokensDto };
   }
 
-  async check(
-    refreshCredentialsDto: RefreshCredentialsDto,
-  ): Promise<IToken | null> {
+  async check(refreshCredentialsDto: RefreshCredentialsDto): Promise<IToken | null> {
     const { refreshToken, fingerprint } = refreshCredentialsDto;
 
     const token: Token = await this.TokenModel.findOne({ refreshToken });
@@ -59,6 +57,7 @@ export class TokenService {
     { refreshToken }: TokensDto,
     fingerprint: string,
   ): Promise<IToken> {
-    return this.TokenModel.updateOne({ _id }, { $set: { refreshToken, fingerprint } });
+    this.TokenModel.updateOne({ _id }, { $set: { refreshToken, fingerprint } });
+    return this.TokenModel.findOne({ _id }).exec();
   }
 }

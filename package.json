@@ -18,7 +18,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "create:seeder": "npx nestjs-command create:seeder"
   },
   "dependencies": {
     "@nestjs/common": "^7.6.17",
@@ -35,6 +36,7 @@
     "class-validator": "^0.13.1",
     "lodash.omit": "^4.5.0",
     "mongoose": "^5.12.13",
+    "nestjs-command": "^3.0.2",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.13",

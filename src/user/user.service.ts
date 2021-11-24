@@ -56,8 +56,6 @@ export class UserService {
   }
 
   async getDemoUser(): Promise<User> {
-    return await this.UserModel
-      .findOne({ _id: Types.ObjectId('demo') })
-      .exec();
+    return await this.UserModel.findOne({ _id: Types.ObjectId(process.env.DEMO_USER_ID) }).exec();
   }
 }

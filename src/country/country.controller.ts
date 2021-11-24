@@ -1,23 +1,15 @@
-import {
-  Get,
-  UseGuards,
-  Controller,
-} from '@nestjs/common';
+import { Get, UseGuards, Controller, Query } from '@nestjs/common';
 
-import Countries from './countries.static.json';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { CountryService } from './country.service';
 
 @Controller('countries')
 export class CountryController {
-  private countries: string[];
-
-  constructor() {
-    this.countries = Countries;
-  }
+  constructor(private readonly countryService: CountryService) {}
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async findAll(): Promise<string[]> {
-    return this.countries;
+  async findAll(@Query('name') name?: string): Promise<string[]> {
+    return this.countryService.findAll(name);
   }
 }

@@ -1,15 +1,11 @@
-import {
-  Prop,
-  Schema,
-  SchemaFactory,
-} from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 import type { IPainting } from '../painting.interface';
 import type { Image } from '../../image/schemas/image.schema';
 import type { Artist } from '../../artist/schemas/artist.schema';
 
-@Schema()
+@Schema({ versionKey: false })
 export class Painting extends Document implements IPainting {
   @Prop()
   name: string;

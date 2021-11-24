@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import omit from 'lodash.omit';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -51,7 +47,7 @@ export class PaintingService {
       artist.mainPainting = painting;
     }
 
-    await artist.updateOne({ _id: artistId }, { $push: { paintings: painting } });
+    await this.ArtistModel.updateOne({ _id: artistId }, { $push: { paintings: painting } });
     await artist.save();
 
     return omit(painting.toObject(), 'artist');
@@ -60,15 +56,13 @@ export class PaintingService {
   async findAll(artistId: string): Promise<IPainting[]> {
     const { _id: artist } = await this.ArtistModel.findOne({ _id: artistId }).exec();
 
-    return this.PaintingModel
-      .find({ artist }, { artist: false })
-      .populate('image').exec();
+    return this.PaintingModel.find({ artist }, { artist: false }).populate('image').exec();
   }
 
   async findOne(_id: string): Promise<IPainting | never> {
-    const painting = await this.PaintingModel
-      .findOne({ _id }, { artist: false })
-      .populate('image').exec();
+    const painting = await this.PaintingModel.findOne({ _id }, { artist: false })
+      .populate('image')
+      .exec();
 
     if (!painting) PaintingService.throwNotFoundException();
 
@@ -89,14 +83,15 @@ export class PaintingService {
 
     if (image) {
       await ImageService.remove(_id);
-      $set.image = await this.imageService.create(image, _id);
+      const newImage = await this.imageService.create(image, _id);
+      $set.image = newImage._id;
     }
 
     const { n: matchedCount } = await this.PaintingModel.updateOne({ _id }, { $set });
 
     if (matchedCount === 0) PaintingService.throwNotFoundException();
 
-    return this.PaintingModel.findOne({ _id }, { artist: false });
+    return this.PaintingModel.findOne({ _id }, { artist: false }).populate('image');
   }
 
   async deleteOne(_id: string): Promise<Types.ObjectId | never> {
@@ -116,7 +111,7 @@ export class PaintingService {
   }
 
   static throwNotFoundException(): never {
-    throw new NotFoundException('Couldn\'t find an painting with this id');
+    throw new NotFoundException("Couldn't find an painting with this id");
   }
 
   private static throwBadRequestException(): never {

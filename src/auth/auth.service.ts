@@ -23,11 +23,7 @@ export class AuthService {
     const user = await this.userService.register(authCredentials);
     const tokens: TokensDto = this.createTokens({ username });
 
-    const { token, tokensDto } = await this.tokenService.create(
-      user,
-      tokens,
-      fingerprint,
-    );
+    const { token, tokensDto } = await this.tokenService.create(user, tokens, fingerprint);
 
     await user.updateOne({ $push: { tokens: token } });
     await user.save();
@@ -46,27 +42,19 @@ export class AuthService {
 
     const tokens: TokensDto = this.createTokens({ username });
 
-    const { tokensDto } = await this.tokenService.create(
-      user,
-      tokens,
-      fingerprint,
-    );
+    const { tokensDto } = await this.tokenService.create(user, tokens, fingerprint);
 
     return tokensDto;
   }
 
-  async refresh(
-    refreshCredentials: RefreshCredentialsDto,
-  ): Promise<TokensDto | never> {
+  async refresh(refreshCredentials: RefreshCredentialsDto): Promise<TokensDto | never> {
     const { refreshToken, fingerprint } = refreshCredentials;
 
     let username: string;
     try {
       username = this.jwtService.verify<JwtPayload>(refreshToken).username;
     } catch {
-      throw new UnauthorizedException(
-        'Please, login. Refresh token has expired.',
-      );
+      throw new UnauthorizedException('Please, login. Refresh token has expired.');
     }
 
     const token = await this.tokenService.check(refreshCredentials);

@@ -15,10 +15,16 @@ import {
   ValidationPipe,
   UseInterceptors,
   DefaultValuePipe,
+  HttpException,
+  HttpStatus,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import type { Types } from 'mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';
 
+import { PaintingService } from 'src/painting/painting.service';
+import { IPainting } from 'src/painting/painting.interface';
+import { PaintingCredentialsDto } from 'src/painting/dto/painting-credentials.dto';
 import type {
   IArtist,
   IArtistsResponse,
@@ -37,6 +43,7 @@ import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
 export class ArtistController {
   constructor(
     private readonly artistService: ArtistService,
+    private readonly paintingService: PaintingService,
   ) {}
 
   @Get('static')
@@ -58,7 +65,6 @@ export class ArtistController {
     const filters: IFiltersCredentials = { genres, country };
     const sorting: ISortingCredentials = { sortBy, orderBy };
     const pagination: IPaginationCredentials = { perPage, pageNumber };
-
     return this.artistService.findAll(user, filters, sorting, pagination);
   }
 
@@ -93,9 +99,7 @@ export class ArtistController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async remove(
-    @Param('id') id: string,
-  ): Promise<Types.ObjectId | never> {
+  async remove(@Param('id') id: string): Promise<Types.ObjectId | never> {
     return await this.artistService.deleteOne(id);
   }
 
@@ -106,5 +110,74 @@ export class ArtistController {
     @Body(ValidationPipe) artistCredentials: Partial<ArtistCredentialsDto>,
   ): Promise<void | never> {
     return await this.artistService.appointMainPainting(id, artistCredentials.mainPainting);
+  }
+
+  @Get(':id/paintings')
+  async findAllPaintings(@Param('id') id: string): Promise<IPainting[]> {
+    return this.paintingService.findAll(id);
+  }
+
+  @Post(':id/paintings')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      fileFilter: (req, file, callback) => {
+        const mimeTypeList = ['image/png', 'image/jpeg'];
+        return mimeTypeList.some((item) => item === file.mimetype)
+          ? callback(null, true)
+          : callback(
+              new HttpException(
+                'Only images type as PNG or JPEG are allowed',
+                HttpStatus.NOT_ACCEPTABLE,
+              ),
+              false,
+            );
+      },
+    }),
+  )
+  async createPainting(
+    @Param('id') id: string,
+    @Body(ValidationPipe) paintingCredentials: PaintingCredentialsDto,
+    @UploadedFile() image: ImageDto,
+  ): Promise<IPainting | never> {
+    if (!image) {
+      throw new UnprocessableEntityException('Image is required');
+    }
+    return this.paintingService.create(id, paintingCredentials, image);
+  }
+
+  @Get(':id/paintings/:paintingId')
+  async findOnePainting(@Param('paintingId') paintingId: string): Promise<IPainting | never> {
+    return this.paintingService.findOne(paintingId);
+  }
+
+  @Put(':id/paintings/:paintingId')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      fileFilter: (req, file, callback) => {
+        const mimeTypeList = ['image/png', 'image/jpeg'];
+        return mimeTypeList.some((item) => item === file.mimetype)
+          ? callback(null, true)
+          : callback(
+              new HttpException(
+                'Only images type as PNG or JPEG are allowed',
+                HttpStatus.NOT_ACCEPTABLE,
+              ),
+              false,
+            );
+      },
+    }),
+  )
+  async updatePainting(
+    @Param('id') id: string,
+    @Param('paintingId') paintingId: string,
+    @Body(ValidationPipe) paintingCredentials: Partial<PaintingCredentialsDto>,
+    @UploadedFile() image?: ImageDto,
+  ): Promise<IPainting | never> {
+    return this.paintingService.update(id, paintingId, paintingCredentials, image);
+  }
+
+  @Delete(':id/paintings/:paintingId')
+  async removePainting(@Param('paintingId') paintingId: string): Promise<Types.ObjectId | never> {
+    return await this.paintingService.deleteOne(paintingId);
   }
 }

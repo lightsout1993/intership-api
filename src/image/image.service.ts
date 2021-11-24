@@ -16,9 +16,7 @@ import type { IImage, Images } from './image.interface';
 
 @Injectable()
 export class ImageService {
-  constructor(
-    @InjectModel(Image.name) private readonly ImageModel: Model<Image>,
-  ) {}
+  constructor(@InjectModel(Image.name) private readonly ImageModel: Model<Image>) {}
 
   async create(imageFile: ImageDto, path: string): Promise<Image> {
     const buffer = await sharp(imageFile.buffer);

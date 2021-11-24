@@ -24,21 +24,23 @@ export interface IArtistsResponse {
 }
 
 export interface IPaginationCredentials {
- perPage?: number;
- pageNumber?: number;
+  perPage?: number;
+  pageNumber?: number;
 }
 
 export interface IFiltersCredentials {
   country?: string;
-  genres?: string[]
+  genres?: string[];
 }
 
 export interface ISortingCredentials {
-  sortBy?: string,
-  orderBy?: 'asc' | 'desc',
+  sortBy?: string;
+  orderBy?: 'asc' | 'desc';
 }
 
 export type ArtistQuery<T> = DocumentQuery<T, Artist>;
 
-export type ArtistUpdateCredentials = Omit<ArtistCredentialsDto, 'mainPainting' | 'genres'>
-    & { genres: Genre[], avatar: Image };
+export type ArtistUpdateCredentials = Omit<ArtistCredentialsDto, 'mainPainting' | 'genres'> & {
+  genres: Genre[];
+  avatar: Image;
+};

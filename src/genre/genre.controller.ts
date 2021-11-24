@@ -14,48 +14,38 @@ import type { Types } from 'mongoose';
 import type IGenre from './genre.interface';
 import { GenreService } from './genre.service';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
-import { User } from '../internal/decorators/user.decorator';
-import type { User as UserModel } from '../user/schemas/user.schema';
 import type { GenreCredentialsDto } from './dto/genre-credentials.dto';
 
 @Controller('genres')
 export class GenreController {
-  constructor(
-    private readonly genreService: GenreService,
-  ) {}
+  constructor(private readonly genreService: GenreService) {}
 
-  @Get()
+  @Get(':id')
   @UseGuards(JwtAuthGuard)
-  async findAll(
-    @User() user: UserModel,
-  ): Promise<IGenre[]> {
-    return this.genreService.findAll(user);
+  async findOne(@Param('id') id: string): Promise<IGenre | never> {
+    return this.genreService.findOne(id);
   }
 
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(
-    @User() user: UserModel,
     @Body(ValidationPipe) genreCredentials: GenreCredentialsDto,
   ): Promise<IGenre | never> {
-    return this.genreService.create(user, genreCredentials);
+    return this.genreService.create(genreCredentials);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   async update(
-    @User() user: UserModel,
     @Param('id') id: string,
     @Body(ValidationPipe) genreCredentials: GenreCredentialsDto,
   ): Promise<IGenre | never> {
-    return this.genreService.update(user, id, genreCredentials);
+    return this.genreService.update(id, genreCredentials);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async remove(
-    @Param('id') id: string,
-  ): Promise<Types.ObjectId | never> {
+  async remove(@Param('id') id: string): Promise<Types.ObjectId | never> {
     return await this.genreService.deleteOne(id);
   }
 }

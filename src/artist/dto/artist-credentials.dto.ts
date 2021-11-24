@@ -19,10 +19,13 @@ export class ArtistCredentialsDto {
 
   @MaxLength(255)
   description: string;
+/* 
+  TODO: Сделать поле country обязательным после того как будет решена проблема с выбором страны при создании артиста
+*/
 
   @IsString()
-  @IsNotEmpty()
-  country: string;
+  @IsOptional()
+  country?: string;
 
   @IsArray()
   @IsOptional()
