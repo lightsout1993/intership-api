@@ -86,7 +86,7 @@ export class ArtistService {
   async findOne(_id: string): Promise<IArtist | never> {
     const artistQuery = this.ArtistModel.findOne({ _id }, { user: false });
 
-    const artist = await ArtistService.populate<Artist>(artistQuery).exec();
+    const artist = await ArtistService.populate<Artist>(artistQuery).populate({ path: 'paintings', populate: { path: 'image' } }).exec();
 
     if (!artist) ArtistService.throwNotFoundException();
 

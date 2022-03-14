@@ -10,8 +10,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 200,
-    credentials: true,
-    allowedHeaders: ['Conten-Type', 'Accept', 'Authorization']
+    credentials: true
   };
   app.enableCors(options)
   await app.listen(3000);
