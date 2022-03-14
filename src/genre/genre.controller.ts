@@ -20,6 +20,17 @@ import type { GenreCredentialsDto } from './dto/genre-credentials.dto';
 export class GenreController {
   constructor(private readonly genreService: GenreService) {}
 
+  @Get('static')
+  async findAllStatic(): Promise<IGenre[]> {
+    return await this.genreService.findAllStatic();
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async findAll(): Promise<IGenre[]> {
+    return this.genreService.findAll();
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string): Promise<IGenre | never> {

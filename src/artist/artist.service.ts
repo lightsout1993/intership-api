@@ -43,7 +43,9 @@ export class ArtistService {
     return await this.ArtistModel.find(
       { user: demoUser._id },
       { avatar: false, paintings: false, user: false },
-    ).exec();
+    )
+      .populate({ path: 'mainPainting', populate: { path: 'image' } })
+      .exec();
   }
 
   async findAll(
@@ -165,19 +167,27 @@ export class ArtistService {
   }
 
   async appointMainPainting(artistId: string, _id: string): Promise<void | never> {
-    const painting = await this.PaintingModel.findOne({ _id }).exec();
+    const artist = await this.ArtistModel.findOne({ _id: artistId });
+    const painting = await this.PaintingModel.findOne({ _id });
 
+    if (!artist) ArtistService.throwNotFoundException();
     if (!painting) PaintingService.throwNotFoundException();
 
-    const { n: matchedCount } = await this.ArtistModel.updateOne({
-      mainPainting: painting,
-    });
+    const { n: matchedCount } = await this.ArtistModel.updateOne(
+      { _id: artistId },
+      {
+        mainPainting: painting,
+      },
+    );
 
     if (matchedCount === 0) ArtistService.throwNotFoundException();
   }
 
   private static populate<T>(artistQuery: ArtistQuery<T>): ArtistQuery<T> {
-    return artistQuery.populate('avatar').populate('mainPainting').populate('genres');
+    return artistQuery
+      .populate('avatar')
+      .populate({ path: 'mainPainting', populate: { path: 'image' } })
+      .populate('genres');
   }
 
   private static filterByGenres(
