@@ -1,15 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import omit from 'lodash.omit';
-import { Model, Types } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-
 import type ImageDto from '../image/dto/image.dto';
-import { Painting } from './schemas/painting.schema';
-import type { IPainting } from './painting.interface';
-import { ImageService } from '../image/image.service';
-import { Artist } from '../artist/schemas/artist.schema';
 import type { Image } from '../image/schemas/image.schema';
 import type { PaintingCredentialsDto } from './dto/painting-credentials.dto';
+import type { IPainting } from './painting.interface';
+
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import omit from 'lodash.omit';
+import { Model, Types } from 'mongoose';
+import { ArtistService } from '../artist/artist.service';
+import { Artist } from '../artist/schemas/artist.schema';
+import { ImageService } from '../image/image.service';
+import { Painting } from './schemas/painting.schema';
 
 @Injectable()
 export class PaintingService {
@@ -43,7 +44,7 @@ export class PaintingService {
 
     const artist = await this.ArtistModel.findOne({ _id: artistId }).exec();
 
-    if (artist.paintings.length) {
+    if (artist.paintings.length === 1) {
       artist.mainPainting = painting;
     }
 
@@ -80,10 +81,11 @@ export class PaintingService {
     if (painting && painting.id !== _id) PaintingService.throwBadRequestException();
 
     const $set: Partial<PaintingCredentialsDto & { image: Image }> = paintingCredentials;
+    const imageId = Types.ObjectId();
 
     if (image) {
-      await ImageService.remove(_id);
-      const newImage = await this.imageService.create(image, _id);
+      // await ImageService.remove(_id);
+      const newImage = await this.imageService.create(image, imageId.toHexString());
       $set.image = newImage._id;
     }
 
@@ -94,13 +96,21 @@ export class PaintingService {
     return this.PaintingModel.findOne({ _id }, { artist: false }).populate('image');
   }
 
-  async deleteOne(_id: string): Promise<Types.ObjectId | never> {
+  async deleteOne(artistId: string, _id: string): Promise<Types.ObjectId | never> {
     const painting = await this.PaintingModel.findOne({ _id }).exec();
+
+    const { n: matchedCount } = await this.ArtistModel.updateOne(
+      { _id: artistId },
+      {
+        mainPainting: null,
+      },
+    );
+
+    if (matchedCount === 0) ArtistService.throwNotFoundException();
 
     if (!painting) PaintingService.throwNotFoundException();
 
     await painting.remove();
-    await ImageService.remove(_id);
 
     return Types.ObjectId(_id);
   }

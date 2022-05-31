@@ -1,16 +1,15 @@
-import { join } from 'path';
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
-
 import { CommandModule } from 'nestjs-command';
-import { AuthModule } from './auth/auth.module';
-import { GenreModule } from './genre/genre.module';
+import { join } from 'path';
 import { ArtistModule } from './artist/artist.module';
-import { SeederModule } from './seeder/seeder.module';
-import { CountryModule } from './country/country.module';
+import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
+import { GenreModule } from './genre/genre.module';
 import { PaintingModule } from './painting/painting.module';
-import { CountryController } from './country/country.controller';
+import { SeederModule } from './seeder/seeder.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -18,14 +17,15 @@ import { CountryController } from './country/country.controller';
     GenreModule,
     ArtistModule,
     SeederModule,
-    CountryModule,
     CommandModule,
     DatabaseModule,
     PaintingModule,
+    TasksModule,
+    ScheduleModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),
   ],
-  controllers: [CountryController],
+  controllers: [],
 })
 export class AppModule {}

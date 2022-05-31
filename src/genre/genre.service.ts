@@ -1,10 +1,10 @@
-import { Model, Types } from 'mongoose';
+import type { GenreCredentialsDto } from './dto/genre-credentials.dto';
+import type IGenre from './genre.interface';
+
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-
-import type IGenre from './genre.interface';
+import { Model, Types } from 'mongoose';
 import { Genre } from './schemas/genre.schema';
-import type { GenreCredentialsDto } from './dto/genre-credentials.dto';
 
 @Injectable()
 export class GenreService {

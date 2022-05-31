@@ -1,29 +1,30 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import omit from 'lodash.omit';
-import { Model, Types } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-
+import type ImageDto from '../image/dto/image.dto';
+import type { Image } from '../image/schemas/image.schema';
 import type {
-  IArtist,
   ArtistQuery,
+  ArtistUpdateCredentials,
+  IArtist,
+  IArtistAggregateQuery,
+  IArtistFilters,
   IArtistsResponse,
   IFiltersCredentials,
-  ISortingCredentials,
   IPaginationCredentials,
-  ArtistUpdateCredentials,
+  ISortingCredentials,
 } from './artist.interface';
-import { Artist } from './schemas/artist.schema';
-import type ImageDto from '../image/dto/image.dto';
+import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
+
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import omit from 'lodash.omit';
+import { LeanDocument, Model, Types } from 'mongoose';
+import { GenreService } from '../genre/genre.service';
+import { Genre } from '../genre/schemas/genre.schema';
+import { ImageService } from '../image/image.service';
+import { PaintingService } from '../painting/painting.service';
+import { Painting } from '../painting/schemas/painting.schema';
 import { User } from '../user/schemas/user.schema';
 import { UserService } from '../user/user.service';
-import { ImageService } from '../image/image.service';
-import { Genre } from '../genre/schemas/genre.schema';
-import { GenreService } from '../genre/genre.service';
-import type { Image } from '../image/schemas/image.schema';
-import { CountryService } from '../country/country.service';
-import { Painting } from '../painting/schemas/painting.schema';
-import { PaintingService } from '../painting/painting.service';
-import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
+import { Artist } from './schemas/artist.schema';
 
 @Injectable()
 export class ArtistService {
@@ -31,7 +32,6 @@ export class ArtistService {
     private readonly userService: UserService,
     private readonly imageService: ImageService,
     private readonly genreService: GenreService,
-    private readonly countryService: CountryService,
     @InjectModel(Genre.name) private readonly GenreModel: Model<Genre>,
     @InjectModel(Artist.name) private readonly ArtistModel: Model<Artist>,
     @InjectModel(Painting.name) private readonly PaintingModel: Model<Painting>,
@@ -51,28 +51,43 @@ export class ArtistService {
   async findAll(
     user: User,
     filters: IFiltersCredentials,
-    sorting: ISortingCredentials,
+    { sortBy, orderBy }: ISortingCredentials,
     pagination: IPaginationCredentials,
   ): Promise<IArtistsResponse> {
-    const artists = this.ArtistModel.find({ user: user._id }, { paintings: false, user: false });
+    const artistFilters: IArtistFilters = { user: user._id };
 
-    const artistSorting = ArtistService.sort(artists, sorting);
+    if (filters.name) artistFilters.name = { $regex: filters.name, $options: 'i' };
+    if (filters.genres.length) artistFilters.genres = { $all: filters.genres };
 
-    const artistsPagination = ArtistService.paginate(artistSorting, pagination);
+    const aggregateQuery: IArtistAggregateQuery[] = [
+      { $match: artistFilters },
+      { $project: { paintings: false, user: false } },
+    ];
 
-    const artistsFilteredByCountry = ArtistService.filterByCountry(
-      artistsPagination,
-      filters.country,
-    );
+    if (sortBy && orderBy) aggregateQuery.push({ $sort: { [sortBy]: orderBy } });
+    if (pagination.perPage && pagination.pageNumber)
+      aggregateQuery.push(
+        {
+          $skip: (pagination.pageNumber - 1) * pagination.perPage,
+        },
+        { $limit: pagination.perPage },
+      );
 
-    const artistsFilteredByGenres = ArtistService.filterByGenres(
-      artistsFilteredByCountry,
-      filters.genres,
-    );
+    const [
+      {
+        data,
+        totalCount: [{ totalCount }],
+      },
+    ] = await this.ArtistModel.aggregate([
+      {
+        $facet: {
+          data: aggregateQuery,
+          totalCount: [{ $match: artistFilters }, { $count: 'totalCount' }],
+        },
+      },
+    ]);
 
-    const data: IArtist[] = await ArtistService.populate<Artist[]>(artistsFilteredByGenres).exec();
-
-    return { data, meta: { count: data.length, ...pagination } };
+    return { data, meta: { count: totalCount, ...pagination } };
   }
 
   async findAllArtists(): Promise<IArtistsResponse> {
@@ -86,7 +101,9 @@ export class ArtistService {
   async findOne(_id: string): Promise<IArtist | never> {
     const artistQuery = this.ArtistModel.findOne({ _id }, { user: false });
 
-    const artist = await ArtistService.populate<Artist>(artistQuery).populate({ path: 'paintings', populate: { path: 'image' } }).exec();
+    const artist = await ArtistService.populate<Artist>(artistQuery)
+      .populate({ path: 'paintings', populate: { path: 'image' } })
+      .exec();
 
     if (!artist) ArtistService.throwNotFoundException();
 
@@ -118,13 +135,26 @@ export class ArtistService {
       await this.genreService.findGenresByIdsOrFail(artistCredentials.genres);
     }
 
-    if (artistCredentials.country) {
-      this.countryService.findValidCountry(artistCredentials.country);
-    }
     artist = new this.ArtistModel(docArtist);
     await artist.save();
 
     return omit(artist.toObject(), ['paintings', 'user', 'mainPainting']);
+  }
+
+  async registrationCreate(
+    user: User,
+    artistCredentials: Omit<LeanDocument<Artist>, 'user'>,
+  ): Promise<void | never> {
+    const artistId = Types.ObjectId();
+
+    const docArtist = {
+      ...artistCredentials,
+      _id: artistId,
+      user: user._id,
+    } as LeanDocument<Artist> & { _id: Types.ObjectId };
+
+    const artist = new this.ArtistModel(docArtist);
+    await artist.save();
   }
 
   async update(
@@ -138,10 +168,14 @@ export class ArtistService {
     if (artist && artist.id !== _id) ArtistService.throwBadRequestException();
 
     const $set: Partial<ArtistUpdateCredentials> = omit(artistCredentials, ['genres', 'country']);
+    const imageId = Types.ObjectId();
 
     if (avatar) {
-      await ImageService.remove(_id);
-      $set.avatar = await this.imageService.create(avatar, _id);
+      // await ImageService.remove(_id);
+      // $set.avatar = await this.imageService.create(avatar, imageId.toHexString());
+      const newImage = await this.imageService.create(avatar, imageId.toHexString());
+      $set.avatar = newImage._id;
+    
     }
 
     if (artistCredentials.genres?.length) {
@@ -161,7 +195,7 @@ export class ArtistService {
     if (!artist) ArtistService.throwNotFoundException();
 
     await artist.remove();
-    await ImageService.remove(_id);
+    // await ImageService.remove(_id);
 
     return Types.ObjectId(_id);
   }
@@ -190,41 +224,11 @@ export class ArtistService {
       .populate('genres');
   }
 
-  private static filterByGenres(
-    artistsQuery: ArtistQuery<Artist[]>,
-    genres: string[],
-  ): ArtistQuery<Artist[]> {
-    return genres.length ? artistsQuery.find({ genres: { $all: genres } }) : artistsQuery;
-  }
-
-  private static filterByCountry(
-    artistsQuery: ArtistQuery<Artist[]>,
-    country: string,
-  ): ArtistQuery<Artist[]> {
-    return country ? artistsQuery.find({ country }) : artistsQuery;
-  }
-
-  private static paginate(
-    artistsQuery: ArtistQuery<Artist[]>,
-    { pageNumber, perPage }: IPaginationCredentials,
-  ): ArtistQuery<Artist[]> {
-    return pageNumber && perPage
-      ? artistsQuery.skip((pageNumber - 1) * perPage).limit(perPage)
-      : artistsQuery;
-  }
-
-  private static sort(
-    artists: ArtistQuery<Artist[]>,
-    { sortBy, orderBy }: ISortingCredentials,
-  ): ArtistQuery<Artist[]> {
-    return sortBy && orderBy ? artists.sort({ [sortBy]: orderBy }) : artists;
-  }
-
   private async findArtistByName(user: User, name: string) {
     return await this.ArtistModel.findOne({ name, user: user._id }).exec();
   }
 
-  private static throwNotFoundException(): never {
+  static throwNotFoundException(): never {
     throw new NotFoundException("Couldn't find an artist with this id");
   }
 

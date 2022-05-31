@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-
 import { UserModule } from 'src/user/user.module';
-import { GenreService } from './genre.service';
 import { GenreController } from './genre.controller';
+import { GenreService } from './genre.service';
 import { Genre, GenreSchema } from './schemas/genre.schema';
 
 @Module({

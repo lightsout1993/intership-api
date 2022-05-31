@@ -1,18 +1,18 @@
+import type ImageDto from './dto/image.dto';
+import type { IImage, Images } from './image.interface';
+
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import fs from 'fs';
 import { Model } from 'mongoose';
 import sharp, { Sharp } from 'sharp';
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-
+import { Image } from './schemas/image.schema';
 import {
   createPublicPaths,
   createStoragePaths,
-  getResizeCredentials,
   getConvertCredentials,
+  getResizeCredentials,
 } from './utils.image';
-import type ImageDto from './dto/image.dto';
-import { Image } from './schemas/image.schema';
-import type { IImage, Images } from './image.interface';
 
 @Injectable()
 export class ImageService {

@@ -1,13 +1,13 @@
-import { Model, Types } from 'mongoose';
+import type { RefreshCredentialsDto } from '../auth/dto/refresh-credentials.dto';
+import type { TokensDto } from '../auth/dto/tokens.dto';
+import type { IUser } from '../user/user.interface';
+import type { IToken } from './token.interface';
+
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-
-import { Token } from './schemas/token.schema';
-import type { IToken } from './token.interface';
+import { Model, Types } from 'mongoose';
 import { User } from '../user/schemas/user.schema';
-import type { IUser } from '../user/user.interface';
-import type { TokensDto } from '../auth/dto/tokens.dto';
-import type { RefreshCredentialsDto } from '../auth/dto/refresh-credentials.dto';
+import { Token } from './schemas/token.schema';
 
 @Injectable()
 export class TokenService {
@@ -56,8 +56,7 @@ export class TokenService {
     _id: Types.ObjectId,
     { refreshToken }: TokensDto,
     fingerprint: string,
-  ): Promise<IToken> {
-    this.TokenModel.updateOne({ _id }, { $set: { refreshToken, fingerprint } });
-    return this.TokenModel.findOne({ _id }).exec();
+  ): Promise<void> {
+    await this.TokenModel.updateOne({ _id }, { $set: { refreshToken, fingerprint } });
   }
 }

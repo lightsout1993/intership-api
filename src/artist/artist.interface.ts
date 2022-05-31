@@ -1,9 +1,10 @@
 import type { Types } from 'mongoose';
+
 import { DocumentQuery } from 'mongoose';
-import { Artist } from './schemas/artist.schema';
-import { ArtistCredentialsDto } from './dto/artist-credentials.dto';
-import { Image } from '../image/schemas/image.schema';
 import { Genre } from '../genre/schemas/genre.schema';
+import { Image } from '../image/schemas/image.schema';
+import { ArtistCredentialsDto } from './dto/artist-credentials.dto';
+import { Artist } from './schemas/artist.schema';
 
 export interface IArtist {
   _id?: Types.ObjectId;
@@ -29,8 +30,22 @@ export interface IPaginationCredentials {
 }
 
 export interface IFiltersCredentials {
-  country?: string;
+  name?: string;
   genres?: string[];
+}
+
+export interface IArtistFilters {
+  user: Types.ObjectId;
+  name?: { $regex: string; $options: string };
+  genres?: { $all: string[] };
+}
+
+export interface IArtistAggregateQuery {
+  $match?: IArtistFilters;
+  $project?: { paintings: boolean; user: boolean };
+  $sort?: Record<string, 'asc' | 'desc'>;
+  $skip?: number;
+  $limit?: number;
 }
 
 export interface ISortingCredentials {

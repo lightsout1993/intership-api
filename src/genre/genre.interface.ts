@@ -1,5 +1,5 @@
 interface IGenre {
-  name: string
+  name: string;
 }
 
 export default IGenre;

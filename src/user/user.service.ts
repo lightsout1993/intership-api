@@ -1,11 +1,11 @@
+import type { AuthCredentialsDto } from '../auth/dto/auth-credentials.dto';
+import type { IUser } from './user.interface';
+
+import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import bcrypt from 'bcryptjs';
 import { Model, Types } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
-
 import { User } from './schemas/user.schema';
-import type { IUser } from './user.interface';
-import type { AuthCredentialsDto } from '../auth/dto/auth-credentials.dto';
 
 @Injectable()
 export class UserService {

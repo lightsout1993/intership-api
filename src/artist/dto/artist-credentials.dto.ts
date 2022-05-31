@@ -1,11 +1,4 @@
-import {
-  IsArray,
-  IsString,
-  MaxLength,
-  MinLength,
-  IsNotEmpty,
-  IsOptional,
-} from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class ArtistCredentialsDto {
   @IsString()
@@ -19,9 +12,6 @@ export class ArtistCredentialsDto {
 
   @MaxLength(255)
   description: string;
-/* 
-  TODO: Сделать поле country обязательным после того как будет решена проблема с выбором страны при создании артиста
-*/
 
   @IsString()
   @IsOptional()
@@ -33,5 +23,5 @@ export class ArtistCredentialsDto {
 
   @IsString()
   @IsOptional()
-  mainPainting?: string;
+  mainPainting?: string | null;
 }

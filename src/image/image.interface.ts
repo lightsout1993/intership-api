@@ -1,5 +1,5 @@
-import type { Sharp } from 'sharp';
 import type { Types } from 'mongoose';
+import type { Sharp } from 'sharp';
 
 export interface IImage {
   _id?: Types.ObjectId;

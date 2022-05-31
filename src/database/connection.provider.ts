@@ -1,5 +1,4 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
 import { databaseConfig } from './database.config';
 
 export const connectionProvider = {

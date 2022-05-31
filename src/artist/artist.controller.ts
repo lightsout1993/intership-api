@@ -1,44 +1,67 @@
-import {
-  Get,
-  Put,
-  Body,
-  Post,
-  Param,
-  Patch,
-  Query,
-  Delete,
-  UseGuards,
-  Controller,
-  ParseIntPipe,
-  UploadedFile,
-  ParseArrayPipe,
-  ValidationPipe,
-  UseInterceptors,
-  DefaultValuePipe,
-  HttpException,
-  HttpStatus,
-  UnprocessableEntityException,
-} from '@nestjs/common';
 import type { Types } from 'mongoose';
-import { FileInterceptor } from '@nestjs/platform-express';
-
-import { PaintingService } from 'src/painting/painting.service';
-import { IPainting } from 'src/painting/painting.interface';
-import { PaintingCredentialsDto } from 'src/painting/dto/painting-credentials.dto';
+import type ImageDto from '../image/dto/image.dto';
+import type { User as UserModel } from '../user/schemas/user.schema';
 import type {
   IArtist,
   IArtistsResponse,
   IFiltersCredentials,
-  ISortingCredentials,
   IPaginationCredentials,
+  ISortingCredentials,
 } from './artist.interface';
-import { ArtistService } from './artist.service';
-import type ImageDto from '../image/dto/image.dto';
-import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
-import { User } from '../internal/decorators/user.decorator';
-import type { User as UserModel } from '../user/schemas/user.schema';
 import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
 
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  ParseArrayPipe,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UnprocessableEntityException,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+  ValidationPipe,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ImageBody } from 'src/image/swagger/ImageBody.swagger';
+import { PaintingCredentialsDto } from 'src/painting/dto/painting-credentials.dto';
+import { IPainting } from 'src/painting/painting.interface';
+import { PaintingService } from 'src/painting/painting.service';
+import { PaintingBody } from 'src/painting/swagger/PaintingBody.swagger';
+import { PaintingDeleteResponse } from 'src/painting/swagger/PaintingDeleteResponse.swagger';
+import { PaintingPutBody } from 'src/painting/swagger/PaintingPutBody.swagger';
+import { PaintingResponse } from 'src/painting/swagger/PaintingResponse.swagger';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { User } from '../internal/decorators/user.decorator';
+import { ArtistService } from './artist.service';
+import { ArtistBody } from './swagger/ArtistBody.swagger';
+import { ArtistDeleteResponse } from './swagger/ArtistDeleteResponse.swagger';
+import { ArtistFindOneResponse } from './swagger/ArtistFindOneResponse.swagger';
+import { ArtistPutBody } from './swagger/ArtistPutBody.swagger';
+import { ArtistPutResponse } from './swagger/ArtistPutResponse.swagger';
+import { ArtistResponse } from './swagger/ArtistResponse.swagger';
+import { ArtistStaticResponse } from './swagger/ArtistStaticResponse.swagger';
+
+@ApiTags('artists')
 @Controller('artists')
 export class ArtistController {
   constructor(
@@ -47,22 +70,37 @@ export class ArtistController {
   ) {}
 
   @Get('static')
+  @ApiOkResponse({
+    type: ArtistStaticResponse,
+    isArray: true,
+  })
   async findAllStatic(): Promise<IArtist[]> {
     return await this.artistService.findAllStatic();
   }
 
   @Get()
   @UseGuards(JwtAuthGuard)
+  @ApiQuery({ name: 'sortBy', required: false, type: 'name' })
+  @ApiQuery({ name: 'name', required: false, type: 'string' })
+  @ApiQuery({ name: 'orderBy', required: false, type: 'asc | desc' })
+  @ApiQuery({ name: 'perPage', required: false, type: 'number' })
+  @ApiQuery({ name: 'genres', required: false, type: 'string[]' })
+  @ApiQuery({ name: 'pageNumber', required: false, type: 'number' })
+  @ApiOkResponse({
+    type: ArtistResponse,
+    isArray: true,
+  })
+  @ApiBearerAuth('JWT-auth')
   async findAll(
     @User() user: UserModel,
     @Query('sortBy') sortBy?: 'name',
-    @Query('country') country?: string,
+    @Query('name') name?: string,
     @Query('orderBy') orderBy?: 'asc' | 'desc',
     @Query('perPage', new DefaultValuePipe(0), ParseIntPipe) perPage?: number,
     @Query('genres', new DefaultValuePipe([]), ParseArrayPipe) genres?: string[],
     @Query('pageNumber', new DefaultValuePipe(0), ParseIntPipe) pageNumber?: number,
   ): Promise<IArtistsResponse> {
-    const filters: IFiltersCredentials = { genres, country };
+    const filters: IFiltersCredentials = { genres, name };
     const sorting: ISortingCredentials = { sortBy, orderBy };
     const pagination: IPaginationCredentials = { perPage, pageNumber };
     return this.artistService.findAll(user, filters, sorting, pagination);
@@ -71,6 +109,13 @@ export class ArtistController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('avatar'))
+  @ApiBody({ type: ArtistBody })
+  @ApiResponse({
+    status: 201,
+    type: ArtistResponse,
+  })
+  @ApiOperation({ summary: 'Создание артиста' })
+  @ApiBearerAuth('JWT-auth')
   async create(
     @User() user: UserModel,
     @Body(ValidationPipe) artistCredentials: ArtistCredentialsDto,
@@ -81,6 +126,10 @@ export class ArtistController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiOkResponse({
+    type: ArtistFindOneResponse,
+  })
+  @ApiBearerAuth('JWT-auth')
   async findOne(@Param('id') id: string): Promise<IArtist | never> {
     return this.artistService.findOne(id);
   }
@@ -88,6 +137,13 @@ export class ArtistController {
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('avatar'))
+  @ApiBody({
+    type: ArtistPutBody,
+  })
+  @ApiOkResponse({
+    type: ArtistPutResponse,
+  })
+  @ApiBearerAuth('JWT-auth')
   async update(
     @User() user: UserModel,
     @Param('id') id: string,
@@ -99,12 +155,20 @@ export class ArtistController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiOkResponse({
+    type: ArtistDeleteResponse,
+  })
+  @ApiBearerAuth('JWT-auth')
   async remove(@Param('id') id: string): Promise<Types.ObjectId | never> {
     return await this.artistService.deleteOne(id);
   }
 
   @Patch(':id/main-painting')
   @UseGuards(JwtAuthGuard)
+  @ApiOkResponse({
+    type: ImageBody,
+  })
+  @ApiBearerAuth('JWT-auth')
   async appointMainPainting(
     @Param('id') id: string,
     @Body(ValidationPipe) artistCredentials: Partial<ArtistCredentialsDto>,
@@ -113,6 +177,7 @@ export class ArtistController {
   }
 
   @Get(':id/paintings')
+  @ApiOkResponse({ type: PaintingResponse, isArray: true })
   async findAllPaintings(@Param('id') id: string): Promise<IPainting[]> {
     return this.paintingService.findAll(id);
   }
@@ -134,6 +199,8 @@ export class ArtistController {
       },
     }),
   )
+  @ApiResponse({ status: 201, type: PaintingResponse })
+  @ApiBody({ type: PaintingBody })
   async createPainting(
     @Param('id') id: string,
     @Body(ValidationPipe) paintingCredentials: PaintingCredentialsDto,
@@ -146,6 +213,8 @@ export class ArtistController {
   }
 
   @Get(':id/paintings/:paintingId')
+  @ApiParam({ name: 'id', type: 'string', required: true })
+  @ApiOkResponse({ type: PaintingResponse })
   async findOnePainting(@Param('paintingId') paintingId: string): Promise<IPainting | never> {
     return this.paintingService.findOne(paintingId);
   }
@@ -167,6 +236,8 @@ export class ArtistController {
       },
     }),
   )
+  @ApiBody({ type: PaintingPutBody })
+  @ApiOkResponse({ type: PaintingResponse })
   async updatePainting(
     @Param('id') id: string,
     @Param('paintingId') paintingId: string,
@@ -177,7 +248,12 @@ export class ArtistController {
   }
 
   @Delete(':id/paintings/:paintingId')
-  async removePainting(@Param('paintingId') paintingId: string): Promise<Types.ObjectId | never> {
-    return await this.paintingService.deleteOne(paintingId);
+  @ApiParam({ name: 'id', type: 'string', required: true })
+  @ApiOkResponse({ type: PaintingDeleteResponse })
+  async removePainting(
+    @Param('id') id: string,
+    @Param('paintingId') paintingId: string,
+  ): Promise<Types.ObjectId | never> {
+    return await this.paintingService.deleteOne(id, paintingId);
   }
 }

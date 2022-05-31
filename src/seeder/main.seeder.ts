@@ -1,19 +1,17 @@
-import * as fs from 'fs';
-import bcrypt from 'bcryptjs';
-import { Types } from 'mongoose';
 import { Injectable } from '@nestjs/common';
+import bcrypt from 'bcryptjs';
+import * as fs from 'fs';
+import { Types } from 'mongoose';
 import { Command } from 'nestjs-command';
-
-import { UserService } from 'src/user/user.service';
-import { GenreService } from 'src/genre/genre.service';
 import { ArtistService } from 'src/artist/artist.service';
-import { PaintingService } from 'src/painting/painting.service';
-import { IPainting } from 'src/painting/painting.interface';
-import IGenre from 'src/genre/genre.interface';
-
 import Artists from 'src/artist/artists.static.json';
+import IGenre from 'src/genre/genre.interface';
+import { GenreService } from 'src/genre/genre.service';
 import Genres from 'src/genre/genres.static.json';
+import { IPainting } from 'src/painting/painting.interface';
+import { PaintingService } from 'src/painting/painting.service';
 import Paintings from 'src/painting/paintings.static.json';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class MainSeeder {
@@ -37,10 +35,7 @@ export class MainSeeder {
 
   async createUser(): Promise<void> {
     const salt = await bcrypt.genSalt();
-    const passwordHash = await bcrypt.hash(
-      process.env.DEMO_USER_PASSWORD,
-      salt,
-    );
+    const passwordHash = await bcrypt.hash(process.env.DEMO_USER_PASSWORD, salt);
 
     await this.userService.create({
       _id: Types.ObjectId(process.env.DEMO_USER_ID),
@@ -57,9 +52,12 @@ export class MainSeeder {
     await Promise.all(
       Artists.map(async ({ genres: artistGenres, ...restInfo }) => {
         const genresIds = artistGenres.map(
-          (artistGenre) => (genres.find((genre) => genre.name === artistGenre) as IGenre & {
-              _id: string;
-            })._id,
+          (artistGenre) =>
+            (
+              genres.find((genre) => genre.name === artistGenre) as IGenre & {
+                _id: string;
+              }
+            )._id,
         );
 
         const pathImage = MainSeeder.pathImage('avatars', restInfo.name);
@@ -102,9 +100,7 @@ export class MainSeeder {
         }[] = [];
 
         await Promise.all(
-          Paintings.map(async ({
-            imageUrl, name, created, authorName,
-          }) => {
+          Paintings.map(async ({ imageUrl, name, created, authorName }) => {
             if (authorName === artistName) {
               const paintingFile = await fs.promises.readFile(imageUrl);
 
@@ -117,18 +113,16 @@ export class MainSeeder {
         );
 
         await Promise.all(
-          currentArtistPaintings.map(
-            async ({ painting, image }) => {
-              await this.paintingService.create(artistId.toString(), painting, {
-                originalname: painting.name,
-                mimetype: '',
-                fieldname: '',
-                encoding: '',
-                size: 0,
-                buffer: image,
-              });
-            },
-          ),
+          currentArtistPaintings.map(async ({ painting, image }) => {
+            await this.paintingService.create(artistId.toString(), painting, {
+              originalname: painting.name,
+              mimetype: '',
+              fieldname: '',
+              encoding: '',
+              size: 0,
+              buffer: image,
+            });
+          }),
         );
       }),
     );
