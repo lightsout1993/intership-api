@@ -1,9 +1,10 @@
 import type { Types } from 'mongoose';
+
 import { DocumentQuery } from 'mongoose';
-import { Artist } from './schemas/artist.schema';
-import { ArtistCredentialsDto } from './dto/artist-credentials.dto';
-import { Image } from '../image/schemas/image.schema';
 import { Genre } from '../genre/schemas/genre.schema';
+import { Image } from '../image/schemas/image.schema';
+import { ArtistCredentialsDto } from './dto/artist-credentials.dto';
+import { Artist } from './schemas/artist.schema';
 
 export interface IArtist {
   _id?: Types.ObjectId;
@@ -24,21 +25,37 @@ export interface IArtistsResponse {
 }
 
 export interface IPaginationCredentials {
- perPage?: number;
- pageNumber?: number;
+  perPage?: number;
+  pageNumber?: number;
 }
 
 export interface IFiltersCredentials {
-  country?: string;
-  genres?: string[]
+  name?: string;
+  genres?: string[];
+}
+
+export interface IArtistFilters {
+  user: Types.ObjectId;
+  name?: { $regex: string; $options: string };
+  genres?: { $all: string[] };
+}
+
+export interface IArtistAggregateQuery {
+  $match?: IArtistFilters;
+  $project?: { paintings: boolean; user: boolean };
+  $sort?: Record<string, 'asc' | 'desc'>;
+  $skip?: number;
+  $limit?: number;
 }
 
 export interface ISortingCredentials {
-  sortBy?: string,
-  orderBy?: 'asc' | 'desc',
+  sortBy?: string;
+  orderBy?: 'asc' | 'desc';
 }
 
 export type ArtistQuery<T> = DocumentQuery<T, Artist>;
 
-export type ArtistUpdateCredentials = Omit<ArtistCredentialsDto, 'mainPainting' | 'genres'>
-    & { genres: Genre[], avatar: Image };
+export type ArtistUpdateCredentials = Omit<ArtistCredentialsDto, 'mainPainting' | 'genres'> & {
+  genres: Genre[];
+  avatar: Image;
+};

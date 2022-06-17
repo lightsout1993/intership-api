@@ -1,61 +1,80 @@
+import type { Types } from 'mongoose';
+import type { GenreCredentialsDto } from './dto/genre-credentials.dto';
+import type IGenre from './genre.interface';
+
 import {
-  Get,
-  Put,
   Body,
-  Post,
-  Param,
-  Delete,
-  UseGuards,
   Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import type { Types } from 'mongoose';
-
-import type IGenre from './genre.interface';
-import { GenreService } from './genre.service';
+import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
-import { User } from '../internal/decorators/user.decorator';
-import type { User as UserModel } from '../user/schemas/user.schema';
-import type { GenreCredentialsDto } from './dto/genre-credentials.dto';
+import { GenreService } from './genre.service';
+import { GenreBody } from './swagger/GenreBody.swagger';
+import { GenreDeleteResponse } from './swagger/GenreDeleteResponse.swagger';
+import { GenreResponse } from './swagger/GenreResponse.swagger';
 
+@ApiTags('genres')
 @Controller('genres')
 export class GenreController {
-  constructor(
-    private readonly genreService: GenreService,
-  ) {}
+  constructor(private readonly genreService: GenreService) {}
+
+  @Get('static')
+  @ApiOkResponse({ type: GenreResponse, isArray: true })
+  async findAllStatic(): Promise<IGenre[]> {
+    return await this.genreService.findAllStatic();
+  }
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async findAll(
-    @User() user: UserModel,
-  ): Promise<IGenre[]> {
-    return this.genreService.findAll(user);
+  @ApiBearerAuth('JWT-auth')
+  @ApiOkResponse({ type: GenreResponse, isArray: true })
+  async findAll(): Promise<IGenre[]> {
+    return this.genreService.findAll();
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOkResponse({ type: GenreResponse })
+  async findOne(@Param('id') id: string): Promise<IGenre | never> {
+    return this.genreService.findOne(id);
   }
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiBody({ type: GenreBody })
+  @ApiResponse({ status: 201, type: GenreResponse })
   async create(
-    @User() user: UserModel,
     @Body(ValidationPipe) genreCredentials: GenreCredentialsDto,
   ): Promise<IGenre | never> {
-    return this.genreService.create(user, genreCredentials);
+    return this.genreService.create(genreCredentials);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiBody({ type: GenreBody })
+  @ApiOkResponse({ type: GenreResponse })
   async update(
-    @User() user: UserModel,
     @Param('id') id: string,
     @Body(ValidationPipe) genreCredentials: GenreCredentialsDto,
   ): Promise<IGenre | never> {
-    return this.genreService.update(user, id, genreCredentials);
+    return this.genreService.update(id, genreCredentials);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async remove(
-    @Param('id') id: string,
-  ): Promise<Types.ObjectId | never> {
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse({ type: GenreDeleteResponse })
+  async remove(@Param('id') id: string): Promise<Types.ObjectId | never> {
     return await this.genreService.deleteOne(id);
   }
 }

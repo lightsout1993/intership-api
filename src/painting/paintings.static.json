@@ -1,0 +1,233 @@
+[
+  {
+    "authorName": "Ivan Aivazovsky",
+    "created": "1850",
+    "imageUrl": "src/seeder/assets/paintings/The_ninth_wave.jpeg",
+    "locationId": 1,
+    "name": "The ninth wave"
+  },
+  {
+    "authorName": "François Boucher",
+    "created": "1747",
+    "imageUrl": "src/seeder/assets/paintings/L_Enlevement_d_Europe.jpeg",
+    "locationId": 2,
+    "name": "L`Enlévement d`Europe"
+  },
+  {
+    "authorName": "Leonardo da Vinci",
+    "created": "1472",
+    "imageUrl": "src/seeder/assets/paintings/Annunciation.jpeg",
+    "locationId": 3,
+    "name": "Annunciation"
+  },
+  {
+    "authorName": "Edvard Munch",
+    "created": "1892",
+    "imageUrl": "src/seeder/assets/paintings/Evening_on_Karl_Johan_Street.jpeg",
+    "locationId": 4,
+    "name": "Evening on Karl Johan Street"
+  },
+  {
+    "authorName": "Rembrandt Harmenszoon van Rijn",
+    "created": "1662",
+    "imageUrl": "src/seeder/assets/paintings/Syndics_of_the_Drapers_Guild.jpeg",
+    "locationId": 5,
+    "name": "Syndics of the Drapers' Guild"
+  },
+  {
+    "authorName": "François Boucher",
+    "created": "1746",
+    "imageUrl": "src/seeder/assets/paintings/The_Toilet_Of_Venus.jpeg",
+    "locationId": 6,
+    "name": "The Toilet Of Venus"
+  },
+  {
+    "authorName": "Edvard Munch",
+    "created": "1889",
+    "imageUrl": "src/seeder/assets/paintings/Summer_night_Inger_on_the_beach.jpeg",
+    "locationId": 7,
+    "name": "The"
+  },
+  {
+    "authorName": "Edvard Munch",
+    "created": "1916",
+    "imageUrl": "src/seeder/assets/paintings/The_sun.jpeg",
+    "locationId": 8,
+    "name": "The sun"
+  },
+  {
+    "authorName": "Vincent van Gogh",
+    "created": "1890",
+    "imageUrl": "src/seeder/assets/paintings/Field_with_poppies.jpeg",
+    "locationId": 9,
+    "name": "Field with poppies"
+  },
+  {
+    "authorName": "Sandro Botticelli",
+    "created": "1483",
+    "imageUrl": "src/seeder/assets/paintings/The_Story_of_Nastagio_Degli_Onesti_IV.jpeg",
+    "locationId": 10,
+    "name": "The Story of Nastagio Degli Onesti, part four"
+  },
+  {
+    "authorName": "Rembrandt Harmenszoon van Rijn",
+    "created": "1665",
+    "imageUrl": "src/seeder/assets/paintings/TheJewishBride.jpeg",
+    "locationId": 5,
+    "name": "The Jewish Bride"
+  },
+  {
+    "authorName": "Rembrandt Harmenszoon van Rijn",
+    "created": "1613",
+    "imageUrl": "src/seeder/assets/paintings/The_Anatomy_Lesson_of_Dr_Nicolaes_Tulp.jpeg",
+    "locationId": 11,
+    "name": "The Anatomy Lesson of Dr. Nicolaes Tulp"
+  },
+  {
+    "authorName": "Sandro Botticelli",
+    "created": "1481",
+    "imageUrl": "src/seeder/assets/paintings/Temptations_of_Christ.jpeg",
+    "locationId": 12,
+    "name": "Temptations of Christ"
+  },
+  {
+    "authorName": "Sandro Botticelli",
+    "created": "1483",
+    "imageUrl": "src/seeder/assets/paintings/The_Story_of_Nastagio_Degli_Onesti_II.jpeg",
+    "locationId": 13,
+    "name": "The Story of Nastagio Degli Onesti, part two"
+  },
+  {
+    "authorName": "Ivan Shishkin",
+    "created": "1889",
+    "imageUrl": "src/seeder/assets/paintings/Morning_in_a_pine_forest.jpeg",
+    "locationId": 14,
+    "name": "Morning in a pine forest"
+  },
+  {
+    "authorName": "Ivan Aivazovsky",
+    "created": "1885",
+    "imageUrl": "src/seeder/assets/paintings/Calm.jpeg",
+    "locationId": 10,
+    "name": "Calm"
+  },
+  {
+    "authorName": "Peter Paul Rubens",
+    "created": "1617",
+    "imageUrl": "src/seeder/assets/paintings/Pan_and_Syrinx.jpeg",
+    "locationId": 15,
+    "name": "Pan and Syrinx"
+  },
+  {
+    "authorName": "Ivan Shishkin",
+    "created": "1860",
+    "imageUrl": "src/seeder/assets/paintings/Village_courtyard.jpeg",
+    "locationId": 1,
+    "name": "Village courtyard"
+  },
+  {
+    "authorName": "Ivan Shishkin",
+    "created": "1872",
+    "imageUrl": "src/seeder/assets/paintings/Sosnovyy_Bor_Mast_timber_in_Vyatka_province.jpeg",
+    "locationId": 14,
+    "name": "Sosnovyy Bor. Mast timber in Vyatka province"
+  },
+  {
+    "authorName": "Sandro Botticelli",
+    "created": "1613",
+    "imageUrl": "src/seeder/assets/paintings/The_Birth_of_Venus.jpeg",
+    "locationId": 3,
+    "name": "The Birth of Venus"
+  },
+  {
+    "authorName": "Peter Paul Rubens",
+    "created": "1613",
+    "imageUrl": "src/seeder/assets/paintings/Jupiter_and_Callisto.jpeg",
+    "locationId": 15,
+    "name": "Jupiter and Callisto"
+  },
+  {
+    "authorName": "Ivan Aivazovsky",
+    "created": "1841",
+    "imageUrl": "src/seeder/assets/paintings/Azure_grotto_Naples.jpeg",
+    "locationId": 16,
+    "name": "Azure grotto. Naples"
+  },
+  {
+    "authorName": "François Boucher",
+    "created": "1745",
+    "imageUrl": "src/seeder/assets/paintings/Dark-haired_odalisque.jpeg",
+    "locationId": 2,
+    "name": "Dark-haired odalisque"
+  },
+  {
+    "authorName": "Vincent van Gogh",
+    "created": "1888",
+    "imageUrl": "src/seeder/assets/paintings/Seascape_at_Saintes-Maries-de-La-Mer.jpeg",
+    "locationId": 17,
+    "name": "Seascape at Saintes-Maries-de-La-Mer"
+  },
+  {
+    "authorName": "François Boucher",
+    "created": "1752",
+    "imageUrl": "src/seeder/assets/paintings/The_Blonde_Odalisque.jpeg",
+    "locationId": 18,
+    "name": "The Blonde Odalisque"
+  },
+  {
+    "authorName": "François Boucher",
+    "created": "1735",
+    "imageUrl": "src/seeder/assets/paintings/Landliche_Idylle.jpeg",
+    "locationId": 18,
+    "name": "Ländliche Idylle"
+  },
+  {
+    "authorName": "Edvard Munch",
+    "created": "1895",
+    "imageUrl": "src/seeder/assets/paintings/Moonlight.jpeg",
+    "locationId": 19,
+    "name": "Moonlight"
+  },
+  {
+    "authorName": "Leonardo da Vinci",
+    "created": "1490",
+    "imageUrl": "src/seeder/assets/paintings/TheLastSupper.jpeg",
+    "locationId": 20,
+    "name": "The Last Supper"
+  },
+  {
+    "authorName": "Rembrandt Harmenszoon van Rijn",
+    "created": "1642",
+    "imageUrl": "src/seeder/assets/paintings/TheNightWatch.jpeg",
+    "locationId": 5,
+    "name": "The Night Watch"
+  },
+  {
+    "authorName": "Vincent van Gogh",
+    "created": "1889",
+    "imageUrl": "src/seeder/assets/paintings/LilacBush.jpeg",
+    "locationId": 21,
+    "name": "Lilac Bush"
+  },
+  {
+    "authorName": "Peter Paul Rubens",
+    "created": "1610",
+    "imageUrl": "src/seeder/assets/paintings/PanReclining.jpeg",
+    "locationId": 10,
+    "name": "Pan Reclining"
+  },
+  {
+    "authorName": "Sandro Botticelli",
+    "created": "1488",
+    "imageUrl": "src/seeder/assets/paintings/The_altar_of_St_Barnabas.jpeg",
+    "locationId": 3,
+    "name": "The altar of St. Barnabas"
+  },
+  {
+    "authorName": "Vincent van Gogh",
+    "created": "1889",
+    "imageUrl": "src/seeder/assets/paintings/TheStarryNight.jpeg",
+    "locationId": 22,
+    "name": "The Starry Night"
+  }
+]

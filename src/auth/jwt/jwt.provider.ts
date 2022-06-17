@@ -1,14 +1,13 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
 import { jwtConfig } from './jwt.config';
 import { JwtStrategy } from './jwt.strategy';
 
 type JWTFactory = {
-  secret: string,
+  secret: string;
   signOptions: {
-    expiresIn: string,
-  }
-}
+    expiresIn: string;
+  };
+};
 
 export const JWTProvider = {
   imports: [ConfigModule.forRoot({ load: [jwtConfig] })],

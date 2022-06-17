@@ -1,11 +1,4 @@
-import {
-  IsArray,
-  IsString,
-  MaxLength,
-  MinLength,
-  IsNotEmpty,
-  IsOptional,
-} from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class ArtistCredentialsDto {
   @IsString()
@@ -21,8 +14,8 @@ export class ArtistCredentialsDto {
   description: string;
 
   @IsString()
-  @IsNotEmpty()
-  country: string;
+  @IsOptional()
+  country?: string;
 
   @IsArray()
   @IsOptional()
@@ -30,5 +23,5 @@ export class ArtistCredentialsDto {
 
   @IsString()
   @IsOptional()
-  mainPainting?: string;
+  mainPainting?: string | null;
 }

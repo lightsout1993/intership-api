@@ -1,9 +1,4 @@
-import {
-  IsString,
-  MaxLength,
-  MinLength,
-  IsNotEmpty,
-} from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class GenreCredentialsDto {
   @IsString()

@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Ivan Aivazovsky",
+    "description": "Was a Russian Romantic painter who is considered one of the greatest masters of marine art. Baptized as Hovhannes Aivazian, he was born into an Armenian family in the Black Sea port of Feodosia in Crimea and was mostly based there.",
+    "yearsOfLife": "29 July 1817 – 2 May 1900",
+    "genres": ["Romanticism"]
+  },
+  {
+    "name": "François Boucher",
+    "description": "Was a French painter, draughtsman and etcher, who worked in the Rococo style. Boucher is known for his idyllic and voluptuous paintings on classical themes, decorative allegories, and pastoral scenes. He was perhaps the most celebrated painter and decorative artist of the 18th century.",
+    "yearsOfLife": "29 September 1703 – 30 May 1770",
+    "genres": ["Renaissance"]
+  },
+  {
+    "name": "Leonardo da Vinci",
+    "description": "Was an Italian polymath of the High Renaissance who was active as a painter, draughtsman, engineer, scientist, theorist, sculptor and architect.",
+    "yearsOfLife": "15 April 1452 – 2 May 1519",
+    "genres": ["Renaissance"]
+  },
+  {
+    "name": "Edvard Munch",
+    "description": "Was a Norwegian painter. His best known work, The Scream, has become one of the iconic images of world art.",
+    "yearsOfLife": "12 December 1863 – 23 January 1944",
+    "genres": ["Expressionism", "Symbolism"]
+  },
+  {
+    "name": "Rembrandt Harmenszoon van Rijn",
+    "description": "Was a Dutch draughtsman, painter, and printmaker. An innovative and prolific master in three media,[3] he is generally considered one of the greatest visual artists in the history of art and the most important in Dutch art history.",
+    "yearsOfLife": "5 July 1606 – 4 October 1669",
+    "genres": ["Baroque"]
+  },
+  {
+    "name": "Vincent van Gogh",
+    "description": "Was a Dutch post-impressionist painter who posthumously became one of the most famous and influential figures in the history of Western art.",
+    "yearsOfLife": "30 March 1853 – 29 July 1890",
+    "genres": ["Post-Impressionism"]
+  },
+  {
+    "name": "Sandro Botticelli",
+    "description": "Was an Italian painter of the Early Renaissance.",
+    "yearsOfLife": "c. 1445 – May 17, 1510",
+    "genres": ["Renaissance"]
+  },
+  {
+    "name": "Ivan Shishkin",
+    "description": "Was a Russian landscape painter closely associated with the Peredvizhniki movement.",
+    "yearsOfLife": "25 January 1832 – 20 March 1898",
+    "genres": ["Realism", "Peredvizhniki"]
+  },
+  {
+    "name": "Peter Paul Rubens",
+    "description": "Was a Flemish artist and diplomat from the Duchy of Brabant in the Southern Netherlands (modern-day Belgium) who lived during the Dutch Golden Age.",
+    "yearsOfLife": "28 June 1577 – 30 May 1640",
+    "genres": ["Baroque"]
+  }
+]

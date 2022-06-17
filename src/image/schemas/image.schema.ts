@@ -1,13 +1,9 @@
-import {
-  Prop,
-  Schema,
-  SchemaFactory,
-} from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-
 import type { IImage } from '../image.interface';
 
-@Schema()
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+
+@Schema({ versionKey: false })
 export class Image extends Document implements IImage {
   @Prop()
   original: string;
