@@ -1,42 +1,44 @@
 import bcrypt from 'bcryptjs';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
+
+import type { IUser } from './user.interface';
 
 import { User } from './schemas/user.schema';
-import type { IUser } from './user.interface';
-import type { AuthCredentialsDto } from '../auth/dto/auth-credentials.dto';
+import { AuthCredentialsDto } from '../auth/dto/auth-credentials.dto';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private readonly UserModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private readonly UserModel: Model<User>,
+  ) {}
 
   async create(createUserDto: IUser): Promise<User> {
-    try {
-      const user = new this.UserModel(createUserDto);
-      return await user.save();
-    } catch (error) {
-      throw new InternalServerErrorException();
-    }
+    const user = new this.UserModel(createUserDto);
+    return user.save();
   }
 
   async register(authCredentialsDto: AuthCredentialsDto): Promise<User> {
     const { username, password } = authCredentialsDto;
 
-    if (await this.findOne(username)) {
+    const user = await this.findByUsername(username);
+
+    if (user) {
       throw new ConflictException('Username already exists');
     }
 
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const userCredentials: IUser = { salt, username, password: passwordHash };
-    return this.create(userCredentials);
+    return this.create({ salt, username, password: passwordHash });
   }
 
-  async validateUserPassword(authCredentialsDto: AuthCredentialsDto): Promise<IUser | never> {
-    const { username, password } = authCredentialsDto;
-    const user = await this.findOne(username);
+  async validateUserPassword(
+    username: string,
+    password: string,
+  ): Promise<User | never> {
+    const user = await this.findByUsername(username);
 
     if (!user) {
       throw new ConflictException('User with such username not found');
@@ -51,13 +53,7 @@ export class UserService {
     return user;
   }
 
-  async findOne(username: string): Promise<User | null> {
-    return await this.UserModel.findOne({ username }).exec();
-  }
-
-  async getDemoUser(): Promise<User> {
-    return await this.UserModel
-      .findOne({ _id: Types.ObjectId('demo') })
-      .exec();
+  async findByUsername(username: string): Promise<User> {
+    return this.UserModel.findOne({ username }).exec();
   }
 }

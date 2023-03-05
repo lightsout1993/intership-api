@@ -2,12 +2,12 @@ import { JwtService } from '@nestjs/jwt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import type { TokensDto } from './dto/tokens.dto';
-import { UserService } from '../user/user.service';
 import type { IUser } from '../user/user.interface';
-import { TokenService } from '../token/token.service';
 import type { JwtPayload } from './jwt/jwt-payload.interface';
-import type { AuthCredentialsDto } from './dto/auth-credentials.dto';
-import type { RefreshCredentialsDto } from './dto/refresh-credentials.dto';
+
+import { UserService } from '../user/user.service';
+import { TokenService } from '../token/token.service';
+import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 
 @Injectable()
 export class AuthService {
@@ -23,53 +23,54 @@ export class AuthService {
     const user = await this.userService.register(authCredentials);
     const tokens: TokensDto = this.createTokens({ username });
 
-    const { token, tokensDto } = await this.tokenService.create(
+    const token = await this.tokenService.create(
       user,
-      tokens,
       fingerprint,
+      tokens.refreshToken,
     );
 
-    await user.updateOne({ $push: { tokens: token } });
-    await user.save();
+    await user.updateOne({ $push: { tokens: token._id } }).exec();
 
-    return tokensDto;
+    return tokens;
   }
 
-  async login(authCredentials: AuthCredentialsDto): Promise<TokensDto | never> {
-    const { username, fingerprint } = authCredentials;
-
-    if (!username) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const user = await this.userService.validateUserPassword(authCredentials);
+  async login(
+    fingerprint: string,
+    username: string,
+    password: string,
+  ): Promise<TokensDto | never> {
+    const user = await this.userService.validateUserPassword(
+      username,
+      password,
+    );
 
     const tokens: TokensDto = this.createTokens({ username });
 
-    const { tokensDto } = await this.tokenService.create(
+    const token = await this.tokenService.create(
       user,
-      tokens,
       fingerprint,
+      tokens.refreshToken,
     );
 
-    return tokensDto;
+    await user.updateOne({ $push: { tokens: token._id } }).exec();
+
+    return tokens;
   }
 
   async refresh(
-    refreshCredentials: RefreshCredentialsDto,
+    fingerprint: string,
+    refreshToken: string,
   ): Promise<TokensDto | never> {
-    const { refreshToken, fingerprint } = refreshCredentials;
-
     let username: string;
     try {
       username = this.jwtService.verify<JwtPayload>(refreshToken).username;
     } catch {
       throw new UnauthorizedException(
-        'Please, login. Refresh token has expired.',
+        'Please, login. Refresh token not passed or has expired.',
       );
     }
 
-    const token = await this.tokenService.check(refreshCredentials);
+    const token = await this.tokenService.check(fingerprint, refreshToken);
 
     if (!token) {
       throw new UnauthorizedException('Please, login. Token not found');
@@ -81,19 +82,25 @@ export class AuthService {
     return tokens;
   }
 
+  async logout(refreshToken: string): Promise<void> {
+    await this.tokenService.remove(refreshToken);
+  }
+
   async validateUser(payload: JwtPayload): Promise<IUser> {
     const { username } = payload;
-    const user = await this.userService.findOne(username);
+    const user = await this.userService.findByUsername(username);
 
-    if (!user) throw new UnauthorizedException('User is not authorized!');
+    if (!user) {
+      throw new UnauthorizedException('User is not authorized!');
+    }
 
     return user;
   }
 
   private createTokens(jwtPayload: JwtPayload): TokensDto {
     return {
-      accessToken: this.jwtService.sign(jwtPayload, { expiresIn: '6h' }),
-      refreshToken: this.jwtService.sign(jwtPayload, { expiresIn: '60d' }),
+      accessToken: this.jwtService.sign(jwtPayload, { expiresIn: '4h' }),
+      refreshToken: this.jwtService.sign(jwtPayload, { expiresIn: '4d' }),
     };
   }
 }

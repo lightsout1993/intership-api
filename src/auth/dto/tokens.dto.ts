@@ -1,4 +1,5 @@
 import { Matches } from 'class-validator';
+
 import { TOKEN_REGEXP } from '../../constants/auth.constants';
 
 export class TokensDto {

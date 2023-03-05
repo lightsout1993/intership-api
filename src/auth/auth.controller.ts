@@ -1,11 +1,18 @@
 import {
-  Body, Controller, Post, ValidationPipe,
+  Get,
+  Req,
+  Res,
+  Body,
+  Post,
+  Controller,
+  HttpStatus,
+  ValidationPipe,
 } from '@nestjs/common';
+import { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
-import type { TokensDto } from './dto/tokens.dto';
-import type { AuthCredentialsDto } from './dto/auth-credentials.dto';
-import type { RefreshCredentialsDto } from './dto/refresh-credentials.dto';
+import { AuthCredentialsDto } from './dto/auth-credentials.dto';
+import { RefreshCredentialsDto } from './dto/refresh-credentials.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -13,22 +20,65 @@ export class AuthController {
 
   @Post('register')
   async register(
+    @Res({ passthrough: true }) response: Response,
     @Body(ValidationPipe) authCredentials: AuthCredentialsDto,
-  ): Promise<TokensDto> {
-    return this.authService.register(authCredentials);
+  ): Promise<{ accessToken: string }> {
+    const { accessToken, refreshToken } = await this.authService.register(
+      authCredentials,
+    );
+
+    this.setCookie(response, refreshToken);
+
+    return { accessToken };
   }
 
   @Post('login')
   async login(
-    @Body(ValidationPipe) authCredentials: AuthCredentialsDto,
-  ): Promise<TokensDto> {
-    return this.authService.login(authCredentials);
+    @Res({ passthrough: true }) response: Response,
+    @Body(ValidationPipe)
+    { fingerprint, password, username }: AuthCredentialsDto,
+  ): Promise<{ accessToken: string }> {
+    const { accessToken, refreshToken } = await this.authService.login(
+      fingerprint,
+      password,
+      username,
+    );
+
+    this.setCookie(response, refreshToken);
+
+    return { accessToken };
   }
 
   @Post('refresh')
   async refresh(
-    @Body(ValidationPipe) refreshCredentials: RefreshCredentialsDto,
-  ): Promise<TokensDto> {
-    return this.authService.refresh(refreshCredentials);
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+    @Body(ValidationPipe) { fingerprint }: RefreshCredentialsDto,
+  ): Promise<{ accessToken: string }> {
+    const oldRefreshToken = request.cookies.refreshToken as string;
+
+    const { accessToken, refreshToken } = await this.authService.refresh(
+      fingerprint,
+      oldRefreshToken,
+    );
+
+    this.setCookie(response, refreshToken);
+
+    return { accessToken };
+  }
+
+  @Get('logout')
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<void> {
+    const refreshToken = request.cookies.refreshToken as string;
+    this.authService.logout(refreshToken);
+
+    response.clearCookie('refreshToken');
+  }
+
+  setCookie(response: Response, refreshToken: string): void {
+    response.cookie('refreshToken', refreshToken, { httpOnly: true });
   }
 }

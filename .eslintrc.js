@@ -12,7 +12,7 @@ module.exports = {
     'airbnb-base',
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
-    'prettier',
+    'plugin:prettier/recommended',
   ],
   root: true,
   env: {
@@ -20,6 +20,7 @@ module.exports = {
     jest: true,
   },
   rules: {
+    'no-shadow': 'off',
     'no-return-await': 'off',
     'no-underscore-dangle': 'off',
     'no-useless-constructor': 'off',
@@ -32,6 +33,7 @@ module.exports = {
     'node/no-unpublished-import': 'off',
     'import/no-extraneous-dependencies': 'off',
     'node/no-unsupported-features/es-syntax': 'off',
+    'class-methods-use-this': 'off',
 
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
