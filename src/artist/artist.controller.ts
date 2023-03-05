@@ -1,3 +1,5 @@
+import type { Types } from 'mongoose';
+
 import {
   Get,
   Put,
@@ -16,50 +18,45 @@ import {
   UseInterceptors,
   DefaultValuePipe,
 } from '@nestjs/common';
-import type { Types } from 'mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import type {
-  IArtist,
-  IArtistsResponse,
-  IFiltersCredentials,
-  ISortingCredentials,
-  IPaginationCredentials,
-} from './artist.interface';
+import type { IArtist, IArtistsResponse } from './artist.interface';
+import type { User as UserModel } from '../user/schemas/user.schema';
+
 import { ArtistService } from './artist.service';
-import type ImageDto from '../image/dto/image.dto';
+import { ImageDto } from '../image/dto/image.dto';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { User } from '../internal/decorators/user.decorator';
-import type { User as UserModel } from '../user/schemas/user.schema';
-import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
+import { ArtistCredentialsDto } from './dto/artist-credentials.dto';
+import { PartialArtistCredentialsDto } from './dto/partial-artist-credentials.dto';
 
 @Controller('artists')
 export class ArtistController {
-  constructor(
-    private readonly artistService: ArtistService,
-  ) {}
-
-  @Get('static')
-  async findAllStatic(): Promise<IArtist[]> {
-    return await this.artistService.findAllStatic();
-  }
+  constructor(private readonly artistService: ArtistService) {}
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   async findAll(
     @User() user: UserModel,
     @Query('sortBy') sortBy?: 'name',
     @Query('country') country?: string,
     @Query('orderBy') orderBy?: 'asc' | 'desc',
     @Query('perPage', new DefaultValuePipe(0), ParseIntPipe) perPage?: number,
-    @Query('genres', new DefaultValuePipe([]), ParseArrayPipe) genres?: string[],
-    @Query('pageNumber', new DefaultValuePipe(0), ParseIntPipe) pageNumber?: number,
+    @Query('genres', new DefaultValuePipe([]), ParseArrayPipe)
+    genres?: string[],
+    @Query('pageNumber', new DefaultValuePipe(0), ParseIntPipe)
+    pageNumber?: number,
   ): Promise<IArtistsResponse> {
-    const filters: IFiltersCredentials = { genres, country };
-    const sorting: ISortingCredentials = { sortBy, orderBy };
-    const pagination: IPaginationCredentials = { perPage, pageNumber };
+    const params = {
+      user,
+      genres,
+      sortBy,
+      country,
+      orderBy,
+      perPage,
+      pageNumber,
+    };
 
-    return this.artistService.findAll(user, filters, sorting, pagination);
+    return this.artistService.findAll(params);
   }
 
   @Post()
@@ -68,15 +65,17 @@ export class ArtistController {
   async create(
     @User() user: UserModel,
     @Body(ValidationPipe) artistCredentials: ArtistCredentialsDto,
-    @UploadedFile() avatar?: ImageDto,
+    @UploadedFile(ValidationPipe) avatar?: ImageDto,
   ): Promise<IArtist | never> {
     return this.artistService.create(user, artistCredentials, avatar);
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  async findOne(@Param('id') id: string): Promise<IArtist | never> {
-    return this.artistService.findOne(id);
+  async findOne(
+    @User() user: UserModel,
+    @Param('id') id: string,
+  ): Promise<IArtist | never> {
+    return this.artistService.findOne(user, id);
   }
 
   @Put(':id')
@@ -85,8 +84,8 @@ export class ArtistController {
   async update(
     @User() user: UserModel,
     @Param('id') id: string,
-    @Body(ValidationPipe) artistCredentials: Partial<ArtistCredentialsDto>,
-    @UploadedFile() avatar?: ImageDto,
+    @Body(ValidationPipe) artistCredentials: PartialArtistCredentialsDto,
+    @UploadedFile(ValidationPipe) avatar?: ImageDto,
   ): Promise<IArtist | never> {
     return this.artistService.update(user, id, artistCredentials, avatar);
   }
@@ -94,17 +93,23 @@ export class ArtistController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async remove(
+    @User() user: UserModel,
     @Param('id') id: string,
   ): Promise<Types.ObjectId | never> {
-    return await this.artistService.deleteOne(id);
+    return this.artistService.deleteOne(user, id);
   }
 
   @Patch(':id/main-painting')
   @UseGuards(JwtAuthGuard)
   async appointMainPainting(
+    @User() user: UserModel,
     @Param('id') id: string,
-    @Body(ValidationPipe) artistCredentials: Partial<ArtistCredentialsDto>,
-  ): Promise<void | never> {
-    return await this.artistService.appointMainPainting(id, artistCredentials.mainPainting);
+    @Body(ValidationPipe) artistCredentials: PartialArtistCredentialsDto,
+  ): Promise<IArtist | never> {
+    return this.artistService.appointMainPainting(
+      user,
+      id,
+      artistCredentials.mainPainting,
+    );
   }
 }

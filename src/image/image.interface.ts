@@ -8,6 +8,7 @@ export interface IImage {
   src2x: string;
   webp2x: string;
   original: string;
+  placeholder: string;
 }
 
 export type Fit = 'contain' | 'cover' | 'fill' | 'inside' | 'outside';
@@ -27,3 +28,5 @@ export interface Images {
   image: Sharp;
   image2x: Sharp;
 }
+
+export type ImageType = 'avatar' | 'painting';

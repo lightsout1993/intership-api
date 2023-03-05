@@ -1,3 +1,5 @@
+import type { Types } from 'mongoose';
+
 import {
   Get,
   Put,
@@ -8,21 +10,21 @@ import {
   Controller,
   UploadedFile,
   ValidationPipe,
-  UseInterceptors, UnprocessableEntityException, Patch,
+  UseInterceptors,
+  UnprocessableEntityException,
 } from '@nestjs/common';
-import type { Types } from 'mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import type ImageDto from '../image/dto/image.dto';
-import { PaintingService } from './painting.service';
 import type { IPainting } from './painting.interface';
-import type { PaintingCredentialsDto } from './dto/painting-credentials.dto';
+
+import { ImageDto } from '../image/dto/image.dto';
+import { PaintingService } from './painting.service';
+import { PaintingCredentialsDto } from './dto/painting-credentials.dto';
+import { PartialPaintingCredentialsDto } from './dto/partial-painting-credentials.dto';
 
 @Controller('artists/:artistId/paintings')
 export class PaintingController {
-  constructor(
-    private readonly paintingService: PaintingService,
-  ) {}
+  constructor(private readonly paintingService: PaintingService) {}
 
   @Get()
   async findAll(@Param('artistId') artistId: string): Promise<IPainting[]> {
@@ -34,7 +36,7 @@ export class PaintingController {
   async create(
     @Param('artistId') artistId: string,
     @Body(ValidationPipe) paintingCredentials: PaintingCredentialsDto,
-    @UploadedFile() image: ImageDto,
+    @UploadedFile(ValidationPipe) image?: ImageDto,
   ): Promise<IPainting | never> {
     if (!image) {
       throw new UnprocessableEntityException('Image is required');
@@ -44,9 +46,7 @@ export class PaintingController {
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-  ): Promise<IPainting | never> {
+  async findOne(@Param('id') id: string): Promise<IPainting | never> {
     return this.paintingService.findOne(id);
   }
 
@@ -55,16 +55,19 @@ export class PaintingController {
   async update(
     @Param('id') id: string,
     @Param('artistId') artistId: string,
-    @Body(ValidationPipe) paintingCredentials: Partial<PaintingCredentialsDto>,
-    @UploadedFile() image?: ImageDto,
+    @Body(ValidationPipe) paintingCredentials: PartialPaintingCredentialsDto,
+    @UploadedFile(ValidationPipe) image?: ImageDto,
   ): Promise<IPainting | never> {
-    return this.paintingService.update(artistId, id, paintingCredentials, image);
+    return this.paintingService.update(
+      artistId,
+      id,
+      paintingCredentials,
+      image,
+    );
   }
 
   @Delete(':id')
-  async remove(
-    @Param('id') id: string,
-  ): Promise<Types.ObjectId | never> {
-    return await this.paintingService.deleteOne(id);
+  async remove(@Param('id') id: string): Promise<string | never> {
+    return this.paintingService.deleteOne(id);
   }
 }

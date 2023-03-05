@@ -7,13 +7,15 @@ import omit from 'lodash.omit';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
-import type ImageDto from '../image/dto/image.dto';
-import { Painting } from './schemas/painting.schema';
 import type { IPainting } from './painting.interface';
+import type { Image } from '../image/schemas/image.schema';
+
+import { ImageDto } from '../image/dto/image.dto';
+import { Painting } from './schemas/painting.schema';
 import { ImageService } from '../image/image.service';
 import { Artist } from '../artist/schemas/artist.schema';
-import type { Image } from '../image/schemas/image.schema';
-import type { PaintingCredentialsDto } from './dto/painting-credentials.dto';
+import { PaintingCredentialsDto } from './dto/painting-credentials.dto';
+import { PartialPaintingCredentialsDto } from './dto/partial-painting-credentials.dto';
 
 @Injectable()
 export class PaintingService {
@@ -23,103 +25,139 @@ export class PaintingService {
     @InjectModel(Painting.name) private readonly PaintingModel: Model<Painting>,
   ) {}
 
+  async findAll(artistId: string): Promise<IPainting[]> {
+    const artist = await this.ArtistModel.findById(artistId)
+      .populate({
+        path: 'paintings',
+        populate: { path: 'image', select: '-_id' },
+      })
+      .exec();
+
+    if (!artist) {
+      throw new NotFoundException("Couldn't find an artist with this id");
+    }
+
+    return artist.paintings;
+  }
+
+  async findOne(_id: string): Promise<IPainting | never> {
+    const painting = await this.PaintingModel.findById(_id, { artist: false })
+      .populate('image', '-_id')
+      .exec();
+
+    if (!painting) {
+      throw new NotFoundException("Couldn't find an painting with this id");
+    }
+
+    return painting;
+  }
+
   async create(
     artistId: string,
     paintingCredentials: PaintingCredentialsDto,
     image: ImageDto,
   ): Promise<IPainting | never> {
-    let painting = await this.findPaintingByName(artistId, paintingCredentials.name);
+    await this.validateName(artistId, paintingCredentials.name);
 
-    if (painting) PaintingService.throwBadRequestException();
+    const paintingId = new Types.ObjectId();
+    const imageId = new Types.ObjectId();
 
-    const paintingId = Types.ObjectId();
+    await this.imageService.create(image, imageId);
 
-    const imageModel: Image = await this.imageService.create(image, paintingId.toHexString());
-
-    painting = new this.PaintingModel({
+    const painting = new this.PaintingModel({
       ...paintingCredentials,
+      image: imageId,
       _id: paintingId,
-      image: imageModel,
-      artist: Types.ObjectId(artistId),
+      artist: new Types.ObjectId(artistId),
     });
 
-    await painting.save();
+    const artist = await this.ArtistModel.findById(artistId)
+      .populate('paintings')
+      .exec();
 
-    const artist = await this.ArtistModel.findOne({ _id: artistId }).exec();
-
-    if (artist.paintings.length) {
-      artist.mainPainting = painting;
+    if (!artist.paintings.length) {
+      artist.mainPainting = painting._id;
     }
 
-    await artist.updateOne({ _id: artistId }, { $push: { paintings: painting } });
+    await artist.updateOne({
+      _id: artistId,
+      $push: { paintings: painting._id },
+    });
+
     await artist.save();
+    await painting.populate('image', '-_id');
 
-    return omit(painting.toObject(), 'artist');
-  }
-
-  async findAll(artistId: string): Promise<IPainting[]> {
-    const { _id: artist } = await this.ArtistModel.findOne({ _id: artistId }).exec();
-
-    return this.PaintingModel
-      .find({ artist }, { artist: false })
-      .populate('image').exec();
-  }
-
-  async findOne(_id: string): Promise<IPainting | never> {
-    const painting = await this.PaintingModel
-      .findOne({ _id }, { artist: false })
-      .populate('image').exec();
-
-    if (!painting) PaintingService.throwNotFoundException();
-
-    return painting;
+    return painting.save();
   }
 
   async update(
     artistId: string,
     _id: string,
-    paintingCredentials: Partial<PaintingCredentialsDto>,
+    paintingCredentials: PartialPaintingCredentialsDto,
     image?: ImageDto,
   ): Promise<IPainting | never> {
-    const painting = await this.findPaintingByName(artistId, paintingCredentials.name);
+    await this.validateName(artistId, paintingCredentials.name);
 
-    if (painting && painting.id !== _id) PaintingService.throwBadRequestException();
+    const painting = await this.PaintingModel.findById(_id, {
+      artist: false,
+    })
+      .populate('image')
+      .exec();
 
-    const $set: Partial<PaintingCredentialsDto & { image: Image }> = paintingCredentials;
+    const imageObject: Record<string, string | Types.ObjectId> = {};
 
     if (image) {
-      await ImageService.remove(_id);
-      $set.image = await this.imageService.create(image, _id);
+      await this.imageService.remove(painting.image._id);
+      const imageId = new Types.ObjectId();
+      await this.imageService.create(image, imageId);
+      imageObject.image = imageId;
     }
 
-    const { n: matchedCount } = await this.PaintingModel.updateOne({ _id }, { $set });
+    const { n: matchedCount } = await painting
+      .updateOne({
+        $set: { ...paintingCredentials, ...imageObject },
+      })
+      .exec();
 
-    if (matchedCount === 0) PaintingService.throwNotFoundException();
+    if (matchedCount === 0) {
+      throw new NotFoundException("Couldn't find an painting with this id");
+    }
 
-    return this.PaintingModel.findOne({ _id }, { artist: false });
+    await painting.populate('image', '-_id');
+
+    return painting.save();
   }
 
-  async deleteOne(_id: string): Promise<Types.ObjectId | never> {
-    const painting = await this.PaintingModel.findOne({ _id }).exec();
+  async deleteOne(_id: string): Promise<string | never> {
+    const painting = await this.PaintingModel.findById(_id)
+      .populate('image')
+      .exec();
 
-    if (!painting) PaintingService.throwNotFoundException();
+    if (!painting) {
+      throw new NotFoundException("Couldn't find an painting with this id");
+    }
 
-    await painting.remove();
-    await ImageService.remove(_id);
+    await this.imageService.remove(painting.image._id);
+    await painting.deleteOne();
 
-    return Types.ObjectId(_id);
+    return _id;
   }
 
-  private async findPaintingByName(artistId: string, name: string) {
-    const { _id: artist } = await this.ArtistModel.findOne({ _id: artistId }).exec();
-    return await this.PaintingModel.findOne({ artist, name }).exec();
-  }
+  private async validateName(
+    artistId: string,
+    paintingName: string,
+  ): Promise<void | never> {
+    const artist = await this.ArtistModel.findById(artistId).exec();
+    await artist.populate('paintings');
 
-  static throwNotFoundException(): never {
-    throw new NotFoundException('Couldn\'t find an painting with this id');
-  }
+    const findIndex = artist.paintings.findIndex(
+      ({ name }) => name === paintingName,
+    );
 
-  private static throwBadRequestException(): never {
-    throw new BadRequestException('An painting with the same name already exists');
+    if (findIndex >= 0) {
+      throw new BadRequestException(
+        'An painting with the same name already exists',
+      );
+    }
   }
 }

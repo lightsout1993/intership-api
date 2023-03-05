@@ -1,11 +1,9 @@
-import {
-  Prop,
-  Schema,
-  SchemaFactory,
-} from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { Prop, SchemaFactory } from '@nestjs/mongoose';
 
-import IGenre from '../genre.interface';
+import type IGenre from '../genre.interface';
+
+import { Schema } from '../../internal/decorators/schema.decorator';
 
 @Schema()
 export class Genre extends Document implements IGenre {

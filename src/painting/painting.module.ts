@@ -13,7 +13,9 @@ import { Artist, ArtistSchema } from '../artist/schemas/artist.schema';
   imports: [
     ImageModule,
     MongooseModule.forFeature([{ name: Artist.name, schema: ArtistSchema }]),
-    MongooseModule.forFeature([{ name: Painting.name, schema: PaintingSchema }]),
+    MongooseModule.forFeature([
+      { name: Painting.name, schema: PaintingSchema },
+    ]),
   ],
 })
 export class PaintingModule {}

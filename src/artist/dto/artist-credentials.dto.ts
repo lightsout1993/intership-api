@@ -14,9 +14,13 @@ export class ArtistCredentialsDto {
   @MaxLength(255)
   name: string;
 
+  @IsString()
+  @IsOptional()
   @MaxLength(255)
   yearsOfLife: string;
 
+  @IsString()
+  @IsOptional()
   @MaxLength(255)
   description: string;
 
@@ -26,7 +30,7 @@ export class ArtistCredentialsDto {
 
   @IsArray()
   @IsOptional()
-  genres: string[];
+  genres?: string[];
 
   @IsString()
   @IsOptional()

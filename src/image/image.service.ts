@@ -1,48 +1,91 @@
 import fs from 'fs';
-import { Model } from 'mongoose';
+import {Model, Types} from 'mongoose';
 import sharp, { Sharp } from 'sharp';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
+import type { IImage, Images, ImageType } from './image.interface';
+
 import {
+  MAX_SIZE,
   createPublicPaths,
   createStoragePaths,
   getResizeCredentials,
   getConvertCredentials,
 } from './utils.image';
-import type ImageDto from './dto/image.dto';
+import { ImageDto } from './dto/image.dto';
 import { Image } from './schemas/image.schema';
-import type { IImage, Images } from './image.interface';
 
 @Injectable()
 export class ImageService {
+  type: ImageType = 'painting';
+
   constructor(
     @InjectModel(Image.name) private readonly ImageModel: Model<Image>,
   ) {}
 
-  async create(imageFile: ImageDto, path: string): Promise<Image> {
+  async create(
+    imageFile: ImageDto,
+    id: Types.ObjectId,
+    type?: ImageType,
+  ): Promise<Image> {
+    this.type = type;
+
     const buffer = await sharp(imageFile.buffer);
-    const jpeg = await ImageService.toJpeg(buffer);
-    const webp = await ImageService.toWebp(buffer);
-    const jpegs = await ImageService.getResizableImages(jpeg);
-    const webps = await ImageService.getResizableImages(webp);
 
-    const paths: IImage = await ImageService.saveFiles(path, jpeg, jpegs, webps);
+    const original = buffer.resize({
+      fit: 'inside',
+      width: MAX_SIZE,
+      height: MAX_SIZE,
+    });
 
-    const image = new this.ImageModel(paths);
-    await image.save();
+    const [jpeg, webp] = await Promise.all([
+      ImageService.toJpeg(original),
+      ImageService.toWebp(original),
+    ]);
 
-    return image;
+    const [jpegs, webps] = await Promise.all([
+      this.getResizableImages(jpeg),
+      this.getResizableImages(webp),
+    ]);
+
+    const placeholder = await ImageService.blur(jpegs.image2x);
+    const paths: IImage = await ImageService.saveFiles(
+      id.toString(),
+      jpeg,
+      jpegs,
+      webps,
+      placeholder,
+    );
+
+    const image = new this.ImageModel({ _id: id, ...paths });
+
+    return image.save();
   }
 
-  static async remove(path: string): Promise<void | never> {
+  async remove(id: string): Promise<void | never> {
+    const imageModel = await this.ImageModel.findById(id).exec();
+
+    if (imageModel?.nonRemovable) {
+      console.warn('This document is not allowed to be deleted');
+      return;
+    }
+
     try {
-      const pathDir = `storage/images/${path}`;
+      imageModel.deleteOne();
+
+      const pathDir = `storage/images/${id}`;
       const files = await fs.promises.readdir(pathDir);
-      await Promise.all(files.map(async (file) => await fs.promises.unlink(`${pathDir}/${file}`)));
-      await fs.promises.rmdir(pathDir);
+
+      const unlinks = files.map((file) =>
+        fs.promises.unlink(`${pathDir}/${file}`),
+      );
+
+      await Promise.all(unlinks);
+
+      fs.promises.rmdir(pathDir);
     } catch (e) {
-      console.warn(e);
+      console.error(e);
     }
   }
 
@@ -51,41 +94,53 @@ export class ImageService {
     original: sharp.Sharp,
     jpegs: Images,
     webps: Images,
+    placeholder: sharp.Sharp,
   ) {
     await fs.promises.mkdir(`storage/images/${path}`, { recursive: true });
     const paths = createStoragePaths(path);
 
-    await Promise.all([
-      jpegs.image.toFile(paths.src),
-      webps.image.toFile(paths.webp),
-      original.toFile(paths.original),
-      jpegs.image2x.toFile(paths.src2x),
-      webps.image2x.toFile(paths.webp2x),
-    ]);
+    original.toFile(paths.original);
+    placeholder.toFile(paths.placeholder);
+
+    jpegs.image.toFile(paths.src);
+    webps.image.toFile(paths.webp);
+
+    jpegs.image2x.toFile(paths.src2x);
+    webps.image2x.toFile(paths.webp2x);
 
     return createPublicPaths(path);
   }
 
-  private static async getResizableImages(sharpBuffer: Sharp): Promise<Images> {
-    const image = await ImageService.resize(sharpBuffer);
-    const image2x = await ImageService.resize2x(sharpBuffer);
+  private async getResizableImages(sharpBuffer: Sharp): Promise<Images> {
+    const [image, image2x] = await Promise.all([
+      this.resize(sharpBuffer),
+      this.resize2x(sharpBuffer),
+    ]);
 
     return { image, image2x };
   }
 
+  private static async blur(sharpBuffer: Sharp): Promise<Sharp> {
+    return sharpBuffer
+      .clone()
+      .greyscale()
+      .jpeg(getConvertCredentials(30))
+      .blur(30);
+  }
+
   private static async toWebp(sharpBuffer: Sharp): Promise<Sharp> {
-    return await sharpBuffer.clone().webp(getConvertCredentials());
+    return sharpBuffer.clone().webp(getConvertCredentials());
   }
 
   private static async toJpeg(sharpBuffer: Sharp): Promise<Sharp> {
-    return await sharpBuffer.clone().jpeg(getConvertCredentials());
+    return sharpBuffer.clone().jpeg(getConvertCredentials());
   }
 
-  private static async resize(sharpBuffer: Sharp): Promise<Sharp> {
-    return sharpBuffer.clone().resize(getResizeCredentials());
+  private async resize(sharpBuffer: Sharp, factor?: number): Promise<Sharp> {
+    return sharpBuffer.clone().resize(getResizeCredentials(this.type, factor));
   }
 
-  private static async resize2x(sharpBuffer: Sharp): Promise<Sharp> {
-    return sharpBuffer.clone().resize(getResizeCredentials(2));
+  private async resize2x(sharpBuffer: Sharp): Promise<Sharp> {
+    return this.resize(sharpBuffer, 2);
   }
 }
