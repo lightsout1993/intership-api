@@ -2,7 +2,8 @@ import { Document } from 'mongoose';
 import { Prop, SchemaFactory } from '@nestjs/mongoose';
 
 import type { IImage } from '../image.interface';
-import { Schema } from '../../internal/decorators/schema.decorator';
+
+import { Schema } from '@/internal/decorators/schema.decorator';
 
 @Schema()
 export class Image extends Document implements IImage {

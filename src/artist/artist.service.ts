@@ -8,20 +8,21 @@ import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 import type {
+  Meta,
   IArtist,
   IFindAllParams,
   IArtistsResponse,
-  Meta,
 } from './artist.interface';
-import type { Image } from '../image/schemas/image.schema';
+import type { Image } from '@/image/schemas/image.schema';
 import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
 
+import { ImageDto } from '@/image/dto/image.dto';
+import { User } from '@/user/schemas/user.schema';
+import { ImageService } from '@/image/image.service';
+import { Genre } from '@/genre/schemas/genre.schema';
+import { Painting } from '@/painting/schemas/painting.schema';
+
 import { Artist } from './schemas/artist.schema';
-import { ImageDto } from '../image/dto/image.dto';
-import { User } from '../user/schemas/user.schema';
-import { ImageService } from '../image/image.service';
-import { Genre } from '../genre/schemas/genre.schema';
-import { Painting } from '../painting/schemas/painting.schema';
 import { PartialArtistCredentialsDto } from './dto/partial-artist-credentials.dto';
 
 @Injectable()
@@ -79,21 +80,14 @@ export class ArtistService {
   }
 
   async findOne(user: User, _id: string): Promise<Artist | never> {
-    const artist = await this.ArtistModel.findOne(
-      { _id, user: user._id },
-      {
-        user: false,
-        paintings: false,
-        mainPainting: false,
-      },
-    )
-      .populate('genres')
-      .populate('avatar', '-_id')
-      .exec();
+    const artist = await this.findById(user, _id, {
+      user: false,
+      paintings: false,
+      mainPainting: false,
+    });
 
-    if (!artist) {
-      throw new NotFoundException("Couldn't find an artist with this id");
-    }
+    await artist.populate('genres');
+    await artist.populate('avatar', '-_id');
 
     return artist;
   }
@@ -131,15 +125,9 @@ export class ArtistService {
     avatar?: ImageDto,
   ): Promise<IArtist | never> {
     await this.validateName(user, artistCredentials.name, _id);
-    const artistExists = await this.ArtistModel.exists({ _id });
 
-    if (!artistExists?._id) {
-      throw new NotFoundException("Couldn't find an artist with this id");
-    }
-
-    const artist = await this.ArtistModel.findOne({ _id, user: user._id })
-      .populate('avatar')
-      .exec();
+    const artist = await this.findById(user, _id);
+    await artist.populate('avatar');
 
     if (artist.avatar && avatar) {
       await this.imageService.remove(artist.avatar._id);
@@ -170,13 +158,8 @@ export class ArtistService {
   }
 
   async deleteOne(user: User, _id: string): Promise<Types.ObjectId | never> {
-    const artist = await this.ArtistModel.findOne({ _id, user: user._id })
-      .populate('avatar')
-      .exec();
-
-    if (!artist) {
-      throw new NotFoundException("Couldn't find an artist with this id");
-    }
+    const artist = await this.findById(user, _id);
+    await artist.populate('avatar');
 
     await this.imageService.remove(artist.avatar._id);
     await artist.deleteOne();
@@ -189,12 +172,8 @@ export class ArtistService {
     artistId: string,
     _id: string,
   ): Promise<IArtist | never> {
-    const artist = await this.ArtistModel.findOne({
-      _id: artistId,
-      user: user._id,
-    })
-      .populate('mainPainting')
-      .exec();
+    const artist = await this.findById(user, _id);
+    await artist.populate('mainPainting');
 
     if (!artist) {
       throw new NotFoundException("Couldn't find an artist with this id");
@@ -220,6 +199,20 @@ export class ArtistService {
     await artist.save();
 
     return omit(artist.toObject(), ['avatar', 'genres', 'paintings', 'user']);
+  }
+
+  async findById(
+    { _id: user }: User,
+    _id: string,
+    projection = {},
+  ): Promise<Artist> {
+    const artist = await this.ArtistModel.findOne({ _id, user }, projection);
+
+    if (!artist) {
+      throw new NotFoundException("Couldn't find an artist with this id");
+    }
+
+    return artist;
   }
 
   private async validateName(

@@ -20,13 +20,15 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
+import type { User as UserModel } from '@/user/schemas/user.schema';
+
+import { ImageDto } from '@/image/dto/image.dto';
+import { JwtAuthGuard } from '@/auth/jwt/jwt-auth.guard';
+import { User } from '@/internal/decorators/user.decorator';
+
 import type { IArtist, IArtistsResponse } from './artist.interface';
-import type { User as UserModel } from '../user/schemas/user.schema';
 
 import { ArtistService } from './artist.service';
-import { ImageDto } from '../image/dto/image.dto';
-import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
-import { User } from '../internal/decorators/user.decorator';
 import { ArtistCredentialsDto } from './dto/artist-credentials.dto';
 import { PartialArtistCredentialsDto } from './dto/partial-artist-credentials.dto';
 

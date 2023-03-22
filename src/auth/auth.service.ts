@@ -1,12 +1,14 @@
 import { JwtService } from '@nestjs/jwt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
+import type { IUser } from '@/user/user.interface';
+
+import { UserService } from '@/user/user.service';
+import { TokenService } from '@/token/token.service';
+
 import type { TokensDto } from './dto/tokens.dto';
-import type { IUser } from '../user/user.interface';
 import type { JwtPayload } from './jwt/jwt-payload.interface';
 
-import { UserService } from '../user/user.service';
-import { TokenService } from '../token/token.service';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 
 @Injectable()

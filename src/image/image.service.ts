@@ -1,5 +1,6 @@
+import type { Model, Types } from 'mongoose';
+
 import fs from 'fs';
-import {Model, Types} from 'mongoose';
 import sharp, { Sharp } from 'sharp';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';

@@ -1,5 +1,3 @@
-import type { Types } from 'mongoose';
-
 import {
   Get,
   Put,
@@ -7,6 +5,7 @@ import {
   Post,
   Param,
   Delete,
+  UseGuards,
   Controller,
   UploadedFile,
   ValidationPipe,
@@ -15,34 +14,52 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
+import type { User as UserModel } from '@/user/schemas/user.schema';
+
+import { ImageDto } from '@/image/dto/image.dto';
+import { ArtistService } from '@/artist/artist.service';
+import { JwtAuthGuard } from '@/auth/jwt/jwt-auth.guard';
+import { User } from '@/internal/decorators/user.decorator';
+
 import type { IPainting } from './painting.interface';
 
-import { ImageDto } from '../image/dto/image.dto';
 import { PaintingService } from './painting.service';
 import { PaintingCredentialsDto } from './dto/painting-credentials.dto';
 import { PartialPaintingCredentialsDto } from './dto/partial-painting-credentials.dto';
 
 @Controller('artists/:artistId/paintings')
 export class PaintingController {
-  constructor(private readonly paintingService: PaintingService) {}
+  constructor(
+    private readonly artistService: ArtistService,
+    private readonly paintingService: PaintingService,
+  ) {}
 
   @Get()
-  async findAll(@Param('artistId') artistId: string): Promise<IPainting[]> {
-    return this.paintingService.findAll(artistId);
+  async findAll(
+    @User() user: UserModel,
+    @Param('artistId') artistId: string,
+  ): Promise<IPainting[]> {
+    const artist = await this.artistService.findById(user, artistId);
+
+    return this.paintingService.findAll(artist);
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('image'))
   async create(
+    @User() user: UserModel,
     @Param('artistId') artistId: string,
     @Body(ValidationPipe) paintingCredentials: PaintingCredentialsDto,
-    @UploadedFile(ValidationPipe) image?: ImageDto,
+    @UploadedFile() image: ImageDto,
   ): Promise<IPainting | never> {
     if (!image) {
       throw new UnprocessableEntityException('Image is required');
     }
 
-    return this.paintingService.create(artistId, paintingCredentials, image);
+    const artist = await this.artistService.findById(user, artistId);
+
+    return this.paintingService.create(artist, paintingCredentials, image);
   }
 
   @Get(':id')
@@ -51,23 +68,29 @@ export class PaintingController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('image'))
   async update(
+    @User() user: UserModel,
     @Param('id') id: string,
     @Param('artistId') artistId: string,
     @Body(ValidationPipe) paintingCredentials: PartialPaintingCredentialsDto,
     @UploadedFile(ValidationPipe) image?: ImageDto,
   ): Promise<IPainting | never> {
-    return this.paintingService.update(
-      artistId,
-      id,
-      paintingCredentials,
-      image,
-    );
+    const artist = await this.artistService.findById(user, artistId);
+
+    return this.paintingService.update(artist, id, paintingCredentials, image);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<string | never> {
-    return this.paintingService.deleteOne(id);
+  @UseGuards(JwtAuthGuard)
+  async remove(
+    @User() user: UserModel,
+    @Param('artistId') artistId: string,
+    @Param('id') id: string,
+  ): Promise<string | never> {
+    const artist = await this.artistService.findById(user, artistId);
+
+    return this.paintingService.deleteOne(artist, id);
   }
 }

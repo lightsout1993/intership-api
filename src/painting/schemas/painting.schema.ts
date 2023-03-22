@@ -1,11 +1,10 @@
 import { Document, Types } from 'mongoose';
 import { Prop, SchemaFactory } from '@nestjs/mongoose';
 
-import type { IPainting } from '../painting.interface';
-import type { Image } from '../../image/schemas/image.schema';
-import type { Artist } from '../../artist/schemas/artist.schema';
+import type { Image } from '@/image/schemas/image.schema';
+import type { IPainting } from '@/painting/painting.interface';
 
-import { Schema } from '../../internal/decorators/schema.decorator';
+import { Schema } from '@/internal/decorators/schema.decorator';
 
 @Schema()
 export class Painting extends Document implements IPainting {

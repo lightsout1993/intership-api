@@ -3,17 +3,16 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import omit from 'lodash.omit';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
-import type { IPainting } from './painting.interface';
-import type { Image } from '../image/schemas/image.schema';
+import { ImageDto } from '@/image/dto/image.dto';
+import { ImageService } from '@/image/image.service';
+import { Artist } from '@/artist/schemas/artist.schema';
 
-import { ImageDto } from '../image/dto/image.dto';
+import type { IPainting } from './painting.interface';
+
 import { Painting } from './schemas/painting.schema';
-import { ImageService } from '../image/image.service';
-import { Artist } from '../artist/schemas/artist.schema';
 import { PaintingCredentialsDto } from './dto/painting-credentials.dto';
 import { PartialPaintingCredentialsDto } from './dto/partial-painting-credentials.dto';
 
@@ -25,13 +24,11 @@ export class PaintingService {
     @InjectModel(Painting.name) private readonly PaintingModel: Model<Painting>,
   ) {}
 
-  async findAll(artistId: string): Promise<IPainting[]> {
-    const artist = await this.ArtistModel.findById(artistId)
-      .populate({
-        path: 'paintings',
-        populate: { path: 'image', select: '-_id' },
-      })
-      .exec();
+  async findAll(artist: Artist): Promise<IPainting[]> {
+    await artist.populate({
+      path: 'paintings',
+      populate: { path: 'image', select: '-_id' },
+    });
 
     if (!artist) {
       throw new NotFoundException("Couldn't find an artist with this id");
@@ -53,11 +50,11 @@ export class PaintingService {
   }
 
   async create(
-    artistId: string,
+    artist: Artist,
     paintingCredentials: PaintingCredentialsDto,
     image: ImageDto,
   ): Promise<IPainting | never> {
-    await this.validateName(artistId, paintingCredentials.name);
+    await this.validateName(artist, paintingCredentials.name);
 
     const paintingId = new Types.ObjectId();
     const imageId = new Types.ObjectId();
@@ -68,20 +65,12 @@ export class PaintingService {
       ...paintingCredentials,
       image: imageId,
       _id: paintingId,
-      artist: new Types.ObjectId(artistId),
+      artist: artist._id,
     });
 
-    const artist = await this.ArtistModel.findById(artistId)
-      .populate('paintings')
-      .exec();
-
-    if (!artist.paintings.length) {
-      artist.mainPainting = painting._id;
-    }
-
     await artist.updateOne({
-      _id: artistId,
       $push: { paintings: painting._id },
+      $set: artist.paintings.length ? {} : { mainPainting: painting._id },
     });
 
     await artist.save();
@@ -91,52 +80,48 @@ export class PaintingService {
   }
 
   async update(
-    artistId: string,
+    artist: Artist,
     _id: string,
     paintingCredentials: PartialPaintingCredentialsDto,
     image?: ImageDto,
   ): Promise<IPainting | never> {
-    await this.validateName(artistId, paintingCredentials.name);
+    await this.validateName(artist, paintingCredentials.name);
 
-    const painting = await this.PaintingModel.findById(_id, {
-      artist: false,
-    })
-      .populate('image')
-      .exec();
-
-    const imageObject: Record<string, string | Types.ObjectId> = {};
-
-    if (image) {
-      await this.imageService.remove(painting.image._id);
-      const imageId = new Types.ObjectId();
-      await this.imageService.create(image, imageId);
-      imageObject.image = imageId;
-    }
-
-    const { n: matchedCount } = await painting
-      .updateOne({
-        $set: { ...paintingCredentials, ...imageObject },
-      })
-      .exec();
-
-    if (matchedCount === 0) {
-      throw new NotFoundException("Couldn't find an painting with this id");
-    }
-
-    await painting.populate('image', '-_id');
-
-    return painting.save();
-  }
-
-  async deleteOne(_id: string): Promise<string | never> {
-    const painting = await this.PaintingModel.findById(_id)
-      .populate('image')
-      .exec();
+    const painting = artist.paintings.find(
+      (painting) => painting._id.toString() === _id,
+    );
 
     if (!painting) {
       throw new NotFoundException("Couldn't find an painting with this id");
     }
 
+    await painting.populate('image');
+
+    if (image) {
+      await this.imageService.remove(painting.image._id);
+      const { _id } = await this.imageService.create(
+        image,
+        new Types.ObjectId(),
+      );
+
+      await painting.updateOne({ $set: { image: _id } });
+    }
+
+    await painting.updateOne({ $set: paintingCredentials }).exec();
+    await painting.populate('image', '-_id');
+
+    return painting.save();
+  }
+
+  async deleteOne(artist: Artist, _id: string): Promise<string | never> {
+    await artist.populate('paintings');
+    const painting = artist.paintings.find(({ _id: id }) => id === _id);
+
+    if (!painting) {
+      throw new NotFoundException("Couldn't find an painting with this id");
+    }
+
+    await painting.populate('image');
     await this.imageService.remove(painting.image._id);
     await painting.deleteOne();
 
@@ -144,10 +129,9 @@ export class PaintingService {
   }
 
   private async validateName(
-    artistId: string,
+    artist: Artist,
     paintingName: string,
   ): Promise<void | never> {
-    const artist = await this.ArtistModel.findById(artistId).exec();
     await artist.populate('paintings');
 
     const findIndex = artist.paintings.findIndex(

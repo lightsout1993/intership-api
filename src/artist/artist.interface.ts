@@ -1,10 +1,10 @@
 import type { Types } from 'mongoose';
 
-import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
+import type { Image } from '@/image/schemas/image.schema';
+import type { Genre } from '@/genre/schemas/genre.schema';
+import type { User as UserModel } from '@/user/schemas/user.schema';
 
-import { Image } from '../image/schemas/image.schema';
-import { Genre } from '../genre/schemas/genre.schema';
-import { User as UserModel } from '../user/schemas/user.schema';
+import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
 
 export interface IArtist {
   _id?: Types.ObjectId;

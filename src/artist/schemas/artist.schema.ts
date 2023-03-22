@@ -1,13 +1,13 @@
 import { Document, Types } from 'mongoose';
 import { Prop, SchemaFactory } from '@nestjs/mongoose';
 
-import type { IArtist } from '../artist.interface';
-import type { User } from '../../user/schemas/user.schema';
-import type { Genre } from '../../genre/schemas/genre.schema';
-import type { Image } from '../../image/schemas/image.schema';
-import type { Painting } from '../../painting/schemas/painting.schema';
+import type { User } from '@/user/schemas/user.schema';
+import type { IArtist } from '@/artist/artist.interface';
+import type { Genre } from '@/genre/schemas/genre.schema';
+import type { Image } from '@/image/schemas/image.schema';
+import type { Painting } from '@/painting/schemas/painting.schema';
 
-import { Schema } from '../../internal/decorators/schema.decorator';
+import { Schema } from '@/internal/decorators/schema.decorator';
 
 @Schema()
 export class Artist extends Document implements IArtist {

@@ -2,11 +2,10 @@ import { Model, Types } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
-import type { IToken } from './token.interface';
+import { TokensDto } from '@/auth/dto/tokens.dto';
+import { User } from '@/user/schemas/user.schema';
 
 import { Token } from './schemas/token.schema';
-import { TokensDto } from '../auth/dto/tokens.dto';
-import { User } from '../user/schemas/user.schema';
 
 @Injectable()
 export class TokenService {

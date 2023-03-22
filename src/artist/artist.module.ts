@@ -1,15 +1,17 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { ImageModule } from '@/image/image.module';
+import { User, UserSchema } from '@/user/schemas/user.schema';
+import { Genre, GenreSchema } from '@/genre/schemas/genre.schema';
+import { Painting, PaintingSchema } from '@/painting/schemas/painting.schema';
+
 import { ArtistService } from './artist.service';
-import { ImageModule } from '../image/image.module';
 import { ArtistController } from './artist.controller';
 import { Artist, ArtistSchema } from './schemas/artist.schema';
-import { User, UserSchema } from '../user/schemas/user.schema';
-import { Genre, GenreSchema } from '../genre/schemas/genre.schema';
-import { Painting, PaintingSchema } from '../painting/schemas/painting.schema';
 
 @Module({
+  exports: [ArtistService],
   providers: [ArtistService],
   controllers: [ArtistController],
   imports: [

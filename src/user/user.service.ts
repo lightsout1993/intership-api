@@ -1,12 +1,19 @@
+import type { Model } from 'mongoose';
+
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import bcrypt from 'bcryptjs';
-import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, ConflictException } from '@nestjs/common';
+
+import { AuthCredentialsDto } from '@/auth/dto/auth-credentials.dto';
 
 import type { IUser } from './user.interface';
 
 import { User } from './schemas/user.schema';
-import { AuthCredentialsDto } from '../auth/dto/auth-credentials.dto';
+import { getDemoUserId } from './utils/user.utils';
 
 @Injectable()
 export class UserService {
@@ -55,5 +62,17 @@ export class UserService {
 
   async findByUsername(username: string): Promise<User> {
     return this.UserModel.findOne({ username }).exec();
+  }
+
+  async getDemoUser(): Promise<User | never> {
+    try {
+      const _id = getDemoUserId();
+
+      return this.UserModel.findById(_id);
+    } catch {
+      throw new NotFoundException(
+        'Demonstration user not found. Please, start seeder!',
+      );
+    }
   }
 }
