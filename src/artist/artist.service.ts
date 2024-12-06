@@ -1,38 +1,43 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import omit from 'lodash.omit';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
-import type {
-  Meta,
-  IArtist,
-  IFindAllParams,
-  IArtistsResponse,
-} from './artist.interface';
 import type { Image } from '@/image/schemas/image.schema';
 import type { ArtistCredentialsDto } from './dto/artist-credentials.dto';
 
 import { ImageDto } from '@/image/dto/image.dto';
+import { UserService } from '@/user/user.service';
 import { User } from '@/user/schemas/user.schema';
-import { ImageService } from '@/image/image.service';
 import { Genre } from '@/genre/schemas/genre.schema';
+import { GenreService } from '@/genre/genre.service';
+import { ImageService } from '@/image/image.service';
 import { Painting } from '@/painting/schemas/painting.schema';
 
 import { Artist } from './schemas/artist.schema';
+import { IFindAllParams } from './artist.interface';
 import { PartialArtistCredentialsDto } from './dto/partial-artist-credentials.dto';
 
 @Injectable()
 export class ArtistService {
   constructor(
+    private readonly userService: UserService,
+    private readonly genreService: GenreService,
     private readonly imageService: ImageService,
     @InjectModel(Genre.name) private readonly GenreModel: Model<Genre>,
     @InjectModel(Artist.name) private readonly ArtistModel: Model<Artist>,
     @InjectModel(Painting.name) private readonly PaintingModel: Model<Painting>,
   ) {}
+
+  async findAllStatic(params: Omit<IFindAllParams, 'user'>) {
+    const user = await this.userService.getDemoUser();
+
+    return this.findAll({ ...params, user });
+  }
 
   async findAll({
     user,
@@ -40,43 +45,34 @@ export class ArtistService {
     genres,
     country,
     orderBy,
-    perPage,
-    pageNumber,
-  }: IFindAllParams): Promise<IArtistsResponse> {
+    count,
+    offset,
+  }: IFindAllParams) {
     let artists = this.ArtistModel.find(
       { user: user._id },
-      { genres: false, paintings: false, user: false },
+      { avatar: false, paintings: false, user: false },
     ).populate({
       path: 'mainPainting',
-      populate: { path: 'image', select: '-_id' },
+      populate: { path: 'image', select: '-_id -nonRemovable' },
     });
 
-    let meta = {} as Meta;
+    const allCount = await artists.clone().countDocuments();
 
-    if (sortBy && orderBy) {
-      artists = artists.sort({ [sortBy]: orderBy });
-    }
+    if (offset || offset === 0) artists = artists.skip(offset);
+    if (count || count === 0) artists = artists.limit(count);
+    if (country) artists = artists.where('country').equals(country);
+    if (genres.length) artists = artists.where('genres').all(genres);
+    if (sortBy && orderBy) artists = artists.sort({ [sortBy]: orderBy });
 
-    if (pageNumber && perPage) {
-      artists = artists.skip((pageNumber - 1) * perPage).limit(perPage);
-      meta = { pageNumber, perPage } as Meta;
-    }
+    const data = await artists.exec();
 
-    if (country) {
-      artists = artists.find({ country });
-    }
+    return { data, allCount };
+  }
 
-    if (genres.length) {
-      artists = artists.find({ genres: { $all: genres } });
-    }
+  async findOneStatic(id: string) {
+    const user = await this.userService.getDemoUser();
 
-    const data: IArtist[] = await artists.exec();
-
-    if (data.length) {
-      meta.count = data.length;
-    }
-
-    return { data, meta };
+    return this.findById(user, id);
   }
 
   async findOne(user: User, _id: string): Promise<Artist | never> {
@@ -86,8 +82,11 @@ export class ArtistService {
       mainPainting: false,
     });
 
-    await artist.populate('genres');
-    await artist.populate('avatar', '-_id');
+    await artist.populate('avatar', '-_id -nonRemovable');
+
+    artist.genres = await this.GenreModel.find({
+      _id: { $in: artist.genres },
+    });
 
     return artist;
   }
@@ -95,27 +94,37 @@ export class ArtistService {
   async create(
     user: User,
     artistCredentials: ArtistCredentialsDto,
-    avatar?: ImageDto,
-  ): Promise<IArtist | never> {
+    avatar?: Partial<ImageDto>,
+  ): Promise<Artist> {
     await this.validateName(user, artistCredentials.name);
+
+    const genres = await Promise.all(
+      artistCredentials.genres?.map((genre) =>
+        this.genreService.findByName(genre),
+      ) || [],
+    );
 
     const newArtist = {
       user: user._id,
       ...artistCredentials,
-    } as ArtistCredentialsDto & { avatar?: Image['_id'] };
+      genres,
+    } as unknown as ArtistCredentialsDto & { avatar?: Image['_id'] };
 
     if (avatar) {
       const avatarId = new Types.ObjectId();
-      await this.imageService.create(avatar, avatarId);
+      await this.imageService.create(avatar, avatarId, 'avatar');
       newArtist.avatar = avatarId;
     }
 
     const artist = new this.ArtistModel(newArtist);
-    await artist.populate({ path: 'avatar', select: '-_id' });
-    await artist.populate({ path: 'mainPainting', select: '-_id' });
+    await artist.populate({ path: 'avatar', select: '-_id -nonRemovable' });
+    await artist.populate({
+      path: 'mainPainting',
+      select: '-_id -nonRemovable',
+    });
     await artist.save();
 
-    return omit(artist.toObject(), 'user');
+    return artist;
   }
 
   async update(
@@ -123,14 +132,14 @@ export class ArtistService {
     _id: string,
     artistCredentials: PartialArtistCredentialsDto,
     avatar?: ImageDto,
-  ): Promise<IArtist | never> {
+  ) {
     await this.validateName(user, artistCredentials.name, _id);
 
     const artist = await this.findById(user, _id);
     await artist.populate('avatar');
 
     if (artist.avatar && avatar) {
-      await this.imageService.remove(artist.avatar._id);
+      await this.imageService.remove(artist.avatar._id as string);
     }
 
     const $set = omit(artistCredentials, 'avatar', 'genres');
@@ -153,48 +162,49 @@ export class ArtistService {
       mainPainting: false,
     })
       .populate({ path: 'genres' })
-      .populate({ path: 'avatar', select: '-_id' })
+      .populate({ path: 'avatar', select: '-_id -nonRemovable' })
       .exec();
   }
 
-  async deleteOne(user: User, _id: string): Promise<Types.ObjectId | never> {
-    const artist = await this.findById(user, _id);
+  async deleteOne(user: User, id: string) {
+    const artist = await this.findById(user, id);
     await artist.populate('avatar');
 
-    await this.imageService.remove(artist.avatar._id);
+    await this.imageService.remove(artist.avatar._id as string);
     await artist.deleteOne();
 
-    return new Types.ObjectId(_id);
+    return new Types.ObjectId(id);
   }
 
   async appointMainPainting(
     user: User,
     artistId: string,
-    _id: string,
-  ): Promise<IArtist | never> {
-    const artist = await this.findById(user, _id);
-    await artist.populate('mainPainting');
+    id: string,
+  ): Promise<Artist> {
+    const artist = await this.findById(user, id);
+    await artist.populate('mainPainting', '-_id -nonRemovable');
 
     if (!artist) {
       throw new NotFoundException("Couldn't find an artist with this id");
     }
 
-    if (artist.mainPainting?._id?.toString() === _id) {
+    if (artist.mainPainting?._id?.toString() === id) {
       throw new BadRequestException('This picture is already the main');
     }
 
-    const painting = await this.PaintingModel.findById(_id)
-      .populate('image', '-_id')
+    const painting = await this.PaintingModel.findById(id)
+      .populate('image', '-_id -nonRemovable')
       .exec();
 
     if (!painting) {
       throw new NotFoundException("Couldn't find an painting with this id");
     }
 
-    artist.mainPainting = painting._id;
+    artist.mainPainting = painting;
+
     await artist.populate({
       path: 'mainPainting',
-      populate: { path: 'image', select: '-_id' },
+      populate: { path: 'image', select: '-_id -nonRemovable' },
     });
     await artist.save();
 
@@ -215,11 +225,7 @@ export class ArtistService {
     return artist;
   }
 
-  private async validateName(
-    { _id: user }: User,
-    name: string,
-    id?: string,
-  ): Promise<void | never> {
+  private async validateName({ _id: user }: User, name: string, id?: string) {
     const artist = await this.ArtistModel.exists({ name, user });
 
     if (artist && artist._id.toString() !== id) {

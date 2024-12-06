@@ -1,5 +1,3 @@
-import type { Types } from 'mongoose';
-
 import {
   Get,
   Put,
@@ -18,6 +16,7 @@ import {
   UseInterceptors,
   DefaultValuePipe,
 } from '@nestjs/common';
+import omit from 'lodash.omit';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 import type { User as UserModel } from '@/user/schemas/user.schema';
@@ -25,8 +24,6 @@ import type { User as UserModel } from '@/user/schemas/user.schema';
 import { ImageDto } from '@/image/dto/image.dto';
 import { JwtAuthGuard } from '@/auth/jwt/jwt-auth.guard';
 import { User } from '@/internal/decorators/user.decorator';
-
-import type { IArtist, IArtistsResponse } from './artist.interface';
 
 import { ArtistService } from './artist.service';
 import { ArtistCredentialsDto } from './dto/artist-credentials.dto';
@@ -36,9 +33,8 @@ import { PartialArtistCredentialsDto } from './dto/partial-artist-credentials.dt
 export class ArtistController {
   constructor(private readonly artistService: ArtistService) {}
 
-  @Get()
-  async findAll(
-    @User() user: UserModel,
+  @Get('/static')
+  async findAllStatic(
     @Query('sortBy') sortBy?: 'name',
     @Query('country') country?: string,
     @Query('orderBy') orderBy?: 'asc' | 'desc',
@@ -47,7 +43,32 @@ export class ArtistController {
     genres?: string[],
     @Query('pageNumber', new DefaultValuePipe(0), ParseIntPipe)
     pageNumber?: number,
-  ): Promise<IArtistsResponse> {
+  ) {
+    const params = {
+      genres,
+      sortBy,
+      country,
+      orderBy,
+      perPage,
+      pageNumber,
+    };
+
+    return this.artistService.findAllStatic(params);
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async findAll(
+    @User() user?: UserModel,
+    @Query('sortBy') sortBy?: 'name',
+    @Query('country') country?: string,
+    @Query('orderBy') orderBy?: 'asc' | 'desc',
+    @Query('perPage', new DefaultValuePipe(0), ParseIntPipe) perPage?: number,
+    @Query('genres', new DefaultValuePipe([]), ParseArrayPipe)
+    genres?: string[],
+    @Query('pageNumber', new DefaultValuePipe(0), ParseIntPipe)
+    pageNumber?: number,
+  ) {
     const params = {
       user,
       genres,
@@ -68,16 +89,26 @@ export class ArtistController {
     @User() user: UserModel,
     @Body(ValidationPipe) artistCredentials: ArtistCredentialsDto,
     @UploadedFile(ValidationPipe) avatar?: ImageDto,
-  ): Promise<IArtist | never> {
-    return this.artistService.create(user, artistCredentials, avatar);
+  ) {
+    const artist = await this.artistService.create(
+      user,
+      artistCredentials,
+      avatar,
+    );
+
+    return omit(artist.toObject(), 'user');
   }
 
   @Get(':id')
-  async findOne(
-    @User() user: UserModel,
-    @Param('id') id: string,
-  ): Promise<IArtist | never> {
-    return this.artistService.findOne(user, id);
+  @UseGuards(JwtAuthGuard)
+  async findOne(@User() user: UserModel, @Param('id') id: string) {
+    return await this.artistService.findOne(user, id);
+  }
+
+  @Get(':id/static')
+  async findOneStatic(@Param('id') id: string) {
+    console.log(await this.artistService.findOneStatic(id));
+    return await this.artistService.findOneStatic(id);
   }
 
   @Put(':id')
@@ -88,16 +119,13 @@ export class ArtistController {
     @Param('id') id: string,
     @Body(ValidationPipe) artistCredentials: PartialArtistCredentialsDto,
     @UploadedFile(ValidationPipe) avatar?: ImageDto,
-  ): Promise<IArtist | never> {
+  ) {
     return this.artistService.update(user, id, artistCredentials, avatar);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async remove(
-    @User() user: UserModel,
-    @Param('id') id: string,
-  ): Promise<Types.ObjectId | never> {
+  async remove(@User() user: UserModel, @Param('id') id: string) {
     return this.artistService.deleteOne(user, id);
   }
 
@@ -107,7 +135,7 @@ export class ArtistController {
     @User() user: UserModel,
     @Param('id') id: string,
     @Body(ValidationPipe) artistCredentials: PartialArtistCredentialsDto,
-  ): Promise<IArtist | never> {
+  ) {
     return this.artistService.appointMainPainting(
       user,
       id,

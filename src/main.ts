@@ -5,7 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
 
-async function bootstrap() {
+const bootstrap = async () => {
   const app = await NestFactory.create(AppModule);
 
   app.use(cookieParser());
@@ -20,5 +20,6 @@ async function bootstrap() {
   if (!fs.existsSync('public')) {
     await fs.promises.symlink('storage', 'public');
   }
-}
+};
+
 bootstrap();

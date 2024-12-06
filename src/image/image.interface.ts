@@ -1,8 +1,6 @@
 import type { Sharp } from 'sharp';
-import type { Types } from 'mongoose';
 
 export interface IImage {
-  _id?: Types.ObjectId;
   src: string;
   webp: string;
   src2x: string;

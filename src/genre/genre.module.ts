@@ -6,6 +6,7 @@ import { GenreController } from './genre.controller';
 import { Genre, GenreSchema } from './schemas/genre.schema';
 
 @Module({
+  exports: [GenreService],
   providers: [GenreService],
   controllers: [GenreController],
   imports: [

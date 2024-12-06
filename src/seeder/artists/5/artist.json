@@ -1,0 +1,54 @@
+{
+  "name": "J. M. W. Turner",
+  "yearsOfLife": "23 April 1775 – 19 December 1851",
+  "country": "London, England",
+  "genres": ["Romanticism"],
+  "avatar": "/portrait.jpg",
+  "pictures": [
+    {
+      "yearOfCreation": "1839",
+      "name": "Modern Rome – Campo Vaccino",
+      "image": "/modern-rome-campo-vaccino.jpg"
+    },
+    {
+      "yearOfCreation": "1796",
+      "name": "Fishermen at Sea",
+      "image": "/fishermen-at-sea.jpg"
+    },
+    {
+      "yearOfCreation": "1803",
+      "name": "Calais Pier",
+      "image": "/calais-pier.jpg"
+    },
+    {
+      "yearOfCreation": "1809",
+      "name": "London from Greenwich Park",
+      "image": "/london-from-greenwich-park.jpg"
+    },
+    {
+      "yearOfCreation": "1811",
+      "name": "Saltash with the Water Ferry",
+      "image": "/saltash-with-the-water-ferry.jpg"
+    },
+    {
+      "yearOfCreation": "1818",
+      "name": "The Field of Waterloo",
+      "image": "/the-field-of-waterloo.jpg"
+    },
+    {
+      "yearOfCreation": "1840",
+      "name": "The Slave Ship",
+      "image": "/the-slave-ship.jpg"
+    },
+    {
+      "yearOfCreation": "1790",
+      "name": "Fisherman's Cottage",
+      "image": "/fishermans-cottage.jpg"
+    },
+    {
+      "yearOfCreation": "1850",
+      "name": "The Departure of the Fleet",
+      "image": "/the-departure-of-the-fleet.jpg"
+    }
+  ]
+}

@@ -1,7 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-
-import type { IUser } from '@/user/user.interface';
 
 import { UserService } from '@/user/user.service';
 import { TokenService } from '@/token/token.service';
@@ -10,6 +9,7 @@ import type { TokensDto } from './dto/tokens.dto';
 import type { JwtPayload } from './jwt/jwt-payload.interface';
 
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
+import { RegisteredEvent } from '@/auth/events/RegisteredEvent';
 
 @Injectable()
 export class AuthService {
@@ -17,9 +17,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async register(authCredentials: AuthCredentialsDto): Promise<TokensDto> {
+  async register(authCredentials: AuthCredentialsDto) {
     const { username, fingerprint } = authCredentials;
 
     const user = await this.userService.register(authCredentials);
@@ -32,6 +33,8 @@ export class AuthService {
     );
 
     await user.updateOne({ $push: { tokens: token._id } }).exec();
+
+    this.eventEmitter.emit('registered', new RegisteredEvent(user));
 
     return tokens;
   }
@@ -84,11 +87,11 @@ export class AuthService {
     return tokens;
   }
 
-  async logout(refreshToken: string): Promise<void> {
+  async logout(refreshToken: string) {
     await this.tokenService.remove(refreshToken);
   }
 
-  async validateUser(payload: JwtPayload): Promise<IUser> {
+  async validateUser(payload: JwtPayload) {
     const { username } = payload;
     const user = await this.userService.findByUsername(username);
 
@@ -99,7 +102,7 @@ export class AuthService {
     return user;
   }
 
-  private createTokens(jwtPayload: JwtPayload): TokensDto {
+  private createTokens(jwtPayload: JwtPayload) {
     return {
       accessToken: this.jwtService.sign(jwtPayload, { expiresIn: '4h' }),
       refreshToken: this.jwtService.sign(jwtPayload, { expiresIn: '4d' }),

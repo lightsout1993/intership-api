@@ -1,0 +1,49 @@
+{
+  "name": "Ivan Aivazovsky",
+  "yearsOfLife": "29 July 1817 - 2 May 1900",
+  "country": "Feodosia, Russian Empire",
+  "genres": ["Romanticism"],
+  "avatar": "/portrait.jpg",
+  "pictures": [
+    {
+      "yearOfCreation": "1845",
+      "name": "Golfo di Napoli",
+      "image": "/golfo-di-napoli.jpg"
+    },
+    {
+      "yearOfCreation": "1850",
+      "name": "The Ninth Wave",
+      "image": "/the-ninth-wave.jpg"
+    },
+    {
+      "yearOfCreation": "1841",
+      "name": "Moonlight Night on Capri",
+      "image": "/moonlight-night-on-capri.jpg"
+    },
+    {
+      "yearOfCreation": "1848",
+      "name": "Evening in the Crimea",
+      "image": "/evening-in-the-crimea.jpg"
+    },
+    {
+      "yearOfCreation": "1861",
+      "name": "Storm",
+      "image": "/storm.jpg"
+    },
+    {
+      "yearOfCreation": "1881",
+      "name": "The Black Sea",
+      "image": "/the-black-sea.jpg"
+    },
+    {
+      "yearOfCreation": "1875",
+      "name": "Shipwreck in the North Sea",
+      "image": "/shipwreck-in-the-north-sea.jpg"
+    },
+    {
+      "yearOfCreation": "1856",
+      "name": "Broad landscape with settlers",
+      "image": "/broad-landscape-with-settlers.jpg"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "name": "Jean-Honoré Fragonard",
+  "yearsOfLife": "5 April 1732 - 22 August 1806",
+  "country": "Grasse, France",
+  "genres": ["Rococo"],
+  "avatar": "/portrait.jpg",
+  "pictures": [
+    {
+      "yearOfCreation": "1765",
+      "name": "Coresus Sacrificing Himself to Save Callirhoe",
+      "image": "/coresus-sacrificing-himselt-to-save-callirhoe.jpg"
+    },
+    {
+      "yearOfCreation": "1756",
+      "name": "Diana and Endymion",
+      "image": "/diana-and-endymion.jpg"
+    },
+    {
+      "yearOfCreation": "1752",
+      "name": "Jeroboam Sacrificing to Idols",
+      "image": "/jeroboam-offering-sacrifice-for-the-idol.jpg"
+    },
+    {
+      "yearOfCreation": "1775",
+      "name": "The Visit to the Nursery",
+      "image": "/the-visit-to-the-nursery.jpg"
+    },
+    {
+      "yearOfCreation": "1787",
+      "name": "The Stolen Kiss",
+      "image": "/the-stolen-kiss.jpg"
+    },
+    {
+      "yearOfCreation": "1780",
+      "name": "The Beloved Child",
+      "image": "/the-beloved-child.jpg"
+    },
+    {
+      "yearOfCreation": "1754",
+      "name": "The Musical Contest",
+      "image": "/the-musical-contest.jpg"
+    },
+    {
+      "yearOfCreation": "1755",
+      "name": "The Birth of Venus",
+      "image": "/the-birth-of-venus.jpg"
+    },
+    {
+      "yearOfCreation": "1775",
+      "name": "Adoration of the Shepherds",
+      "image": "/adoration-of-the-shepherds.jpg"
+    }
+  ]
+}

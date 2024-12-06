@@ -4,5 +4,5 @@ export const Schema = (options?: SchemaOptions): ClassDecorator =>
   SchemaMongoose({
     toJSON: { versionKey: false },
     toObject: { versionKey: false },
-    ...(options || {}),
+    ...options,
   });

@@ -3,7 +3,7 @@ import { resolve } from 'path';
 
 const encoding = 'utf8';
 const fileName = 'demoUserId.txt';
-const path = resolve(__dirname, '../../fixtures/');
+const path = resolve(__dirname, '../../../src/seeder/').replace('dist/', '');
 
 export const getDemoUserId = async (): Promise<string | never> => {
   return fs.promises.readFile(resolve(path, fileName), encoding);

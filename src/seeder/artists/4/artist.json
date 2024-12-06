@@ -1,0 +1,54 @@
+{
+  "name": "Paul Cézanne",
+  "yearsOfLife": "15 July 1606 – 4 October 1669",
+  "country": "Aix-en-Provence, France",
+  "genres": ["Post-Impressionism"],
+  "avatar": "/portrait.jpg",
+  "pictures": [
+    {
+      "yearOfCreation": "1876",
+      "name": "Jas de Bouffan. The Pond",
+      "image": "/jas-de-bouffan-the-pond.jpg"
+    },
+    {
+      "yearOfCreation": "1865",
+      "name": "Still Life with Bread and Eggs",
+      "image": "/still-life-with-bread-and-eggs.jpg"
+    },
+    {
+      "yearOfCreation": "1881",
+      "name": "Mill on the Couleuvre at Pontoise",
+      "image": "/mill-on-the-couleuvre-at-pontoise.jpg"
+    },
+    {
+      "yearOfCreation": "1895",
+      "name": "Still Life with a Curtain",
+      "image": "/still-life-with-a-curtain.jpg"
+    },
+    {
+      "yearOfCreation": "1870",
+      "name": "Paul Alexis Reading a Manuscript to Zola",
+      "image": "/paul-alexis-reading-a-manuscript-to-zola.jpg"
+    },
+    {
+      "yearOfCreation": "1867",
+      "name": "The Abduction",
+      "image": "/the-abduction.jpg"
+    },
+    {
+      "yearOfCreation": "1904",
+      "name": "Montagne Sainte-Victoire",
+      "image": "/montagne-sainte-victoire.jpg"
+    },
+    {
+      "yearOfCreation": "1896",
+      "name": "Annecy Lake",
+      "image": "/annecy-lake.jpg"
+    },
+    {
+      "yearOfCreation": "1869",
+      "name": "Still life with kettle",
+      "image": "/still-life-with-kettle.jpg"
+    }
+  ]
+}

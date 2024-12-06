@@ -2,8 +2,6 @@ import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
-import type IGenre from './genre.interface';
-
 import { Genre } from './schemas/genre.schema';
 import { GenreCredentialsDto } from './dto/genre-credentials.dto';
 
@@ -13,11 +11,15 @@ export class GenreService {
     @InjectModel(Genre.name) private readonly GenreModel: Model<Genre>,
   ) {}
 
-  async findAll(): Promise<IGenre[]> {
+  async findAll() {
     return this.GenreModel.find().exec();
   }
 
-  async create(genreCredentials: GenreCredentialsDto): Promise<IGenre> {
+  async findByName(name: string) {
+    return this.GenreModel.findOne({ name }).exec();
+  }
+
+  async create(genreCredentials: GenreCredentialsDto) {
     const genre = new this.GenreModel(genreCredentials);
 
     return genre.save();

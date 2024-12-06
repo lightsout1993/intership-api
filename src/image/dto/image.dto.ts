@@ -22,4 +22,7 @@ export class ImageDto {
 
   @IsOptional()
   originalname: string;
+
+  @IsOptional()
+  nonRemovable?: boolean;
 }

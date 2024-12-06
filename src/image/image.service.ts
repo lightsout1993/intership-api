@@ -26,7 +26,7 @@ export class ImageService {
   ) {}
 
   async create(
-    imageFile: ImageDto,
+    imageFile: Partial<ImageDto>,
     id: Types.ObjectId,
     type?: ImageType,
   ): Promise<Image> {
@@ -50,7 +50,7 @@ export class ImageService {
       this.getResizableImages(webp),
     ]);
 
-    const placeholder = await ImageService.blur(jpegs.image2x);
+    const placeholder = await ImageService.blur(jpegs.image);
     const paths: IImage = await ImageService.saveFiles(
       id.toString(),
       jpeg,
@@ -59,12 +59,16 @@ export class ImageService {
       placeholder,
     );
 
-    const image = new this.ImageModel({ _id: id, ...paths });
+    const image = new this.ImageModel({
+      _id: id,
+      ...paths,
+      nonRemovable: imageFile.nonRemovable ?? false,
+    });
 
     return image.save();
   }
 
-  async remove(id: string): Promise<void | never> {
+  async remove(id: string) {
     const imageModel = await this.ImageModel.findById(id).exec();
 
     if (imageModel?.nonRemovable) {
@@ -112,7 +116,7 @@ export class ImageService {
     return createPublicPaths(path);
   }
 
-  private async getResizableImages(sharpBuffer: Sharp): Promise<Images> {
+  private async getResizableImages(sharpBuffer: Sharp) {
     const [image, image2x] = await Promise.all([
       this.resize(sharpBuffer),
       this.resize2x(sharpBuffer),
@@ -121,7 +125,7 @@ export class ImageService {
     return { image, image2x };
   }
 
-  private static async blur(sharpBuffer: Sharp): Promise<Sharp> {
+  private static async blur(sharpBuffer: Sharp) {
     return sharpBuffer
       .clone()
       .greyscale()
@@ -129,19 +133,19 @@ export class ImageService {
       .blur(30);
   }
 
-  private static async toWebp(sharpBuffer: Sharp): Promise<Sharp> {
+  private static async toWebp(sharpBuffer: Sharp) {
     return sharpBuffer.clone().webp(getConvertCredentials());
   }
 
-  private static async toJpeg(sharpBuffer: Sharp): Promise<Sharp> {
+  private static async toJpeg(sharpBuffer: Sharp) {
     return sharpBuffer.clone().jpeg(getConvertCredentials());
   }
 
-  private async resize(sharpBuffer: Sharp, factor?: number): Promise<Sharp> {
+  private async resize(sharpBuffer: Sharp, factor?: number) {
     return sharpBuffer.clone().resize(getResizeCredentials(this.type, factor));
   }
 
-  private async resize2x(sharpBuffer: Sharp): Promise<Sharp> {
+  private async resize2x(sharpBuffer: Sharp) {
     return this.resize(sharpBuffer, 2);
   }
 }

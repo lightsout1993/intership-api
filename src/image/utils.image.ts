@@ -8,22 +8,22 @@ export const MAX_SIZE = 2000;
 
 const defaultSizes = {
   avatar: {
-    width: 500,
-    height: 500,
+    width: 1000,
+    height: 1000,
   },
   painting: {
-    width: 300,
-    height: 200,
+    width: 392,
+    height: 260,
   },
 };
 
-const outputQuality = 80;
+const outputQuality = 90;
 
 export const getResizeCredentials = (
   type = 'painting',
   factor = 1,
 ): ResizeCredentials => ({
-  fit: 'cover',
+  fit: 'inside',
   width: defaultSizes[type].width * factor,
   height: defaultSizes[type].height * factor,
 });

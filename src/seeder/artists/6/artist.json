@@ -1,0 +1,54 @@
+{
+  "name": "Ilya Yefimovich Repin",
+  "yearsOfLife": "5 August 1844 – 29 September 1930",
+  "country": "Kharkov Governorate, Russian Empire",
+  "genres": ["Realizm", "Peredvizhniki"],
+  "avatar": "/portrait.jpg",
+  "pictures": [
+    {
+      "yearOfCreation": "1864",
+      "name": "Students studying for an exam at the Academy of the Arts",
+      "image": "/students-studying-for-an-exam-at-the-academy-of-the-arts.jpg"
+    },
+    {
+      "yearOfCreation": "1873",
+      "name": "Barge Haulers on the Volga",
+      "image": "/barge-haulers-on-the-volga.jpg"
+    },
+    {
+      "yearOfCreation": "1874",
+      "name": "Resurrection of the Daughter of Jairus",
+      "image": "/resurrection-of-the-daughter-of-jairus.jpg"
+    },
+    {
+      "yearOfCreation": "1875",
+      "name": "A Paris cafe",
+      "image": "/a-paris-cafe.jpg"
+    },
+    {
+      "yearOfCreation": "1883",
+      "name": "Religious Procession in Kursk Province",
+      "image": "/religious-procession-in-kursk-province.jpg"
+    },
+    {
+      "yearOfCreation": "1885",
+      "name": "Ivan the Terrible and His Son Ivan",
+      "image": "/ivan-the-terrible-and-his-son-ivan.jpg"
+    },
+    {
+      "yearOfCreation": "1891",
+      "name": "Reply of the Zaporozhian Cossacks to Sultan Mehmed IV",
+      "image": "/reply-of-the-zaporozhian-cossacks-to-sultan-mehmed.jpg"
+    },
+    {
+      "yearOfCreation": "1886",
+      "name": "Tsar Alexander III receives local government officials at Petrovsky Palace",
+      "image": "/tsar-alexander-receives-local-government-officials-at-petrovsky-palace.jpg"
+    },
+    {
+      "yearOfCreation": "1905",
+      "name": "Celebration of the new Russian constitution",
+      "image": "/celebration-of-the-new-russian-constitution.jpg"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "name": "Rembrandt Harmenszoon van Rijn",
+  "yearsOfLife": "19 January 1839 – 22 October 1906",
+  "country": "Leiden, Dutch Republic",
+  "genres": ["Painterly"],
+  "avatar": "/portrait.jpg",
+  "pictures": [
+    {
+      "yearOfCreation": "1632",
+      "name": "The Anatomy Lesson of Dr. Nicolaes Tulp",
+      "image": "/the-anatomy-lesson-of-dr-nicolaes-tulp.jpg"
+    },
+    {
+      "yearOfCreation": "1646",
+      "name": "Winter Landscape",
+      "image": "/winter-landscape.jpg"
+    },
+    {
+      "yearOfCreation": "1632",
+      "name": "The Abduction of Europa",
+      "image": "/the-abduction-of-europa.jpg"
+    },
+    {
+      "yearOfCreation": "1643",
+      "name": "The Three Trees",
+      "image": "/the-three-trees.jpg"
+    },
+    {
+      "yearOfCreation": "1655",
+      "name": "The Polish Rider",
+      "image": "/the-polish-rider.jpg"
+    },
+    {
+      "yearOfCreation": "1638",
+      "name": "Belshazzar's Feast",
+      "image": "/belshazzars-feast.jpg"
+    },
+    {
+      "yearOfCreation": "1662",
+      "name": "Syndics of the Drapers' Guild",
+      "image": "/syndics-of-the-drapers-guild.jpg"
+    },
+    {
+      "yearOfCreation": "1662",
+      "name": "The Conspiracy of Claudius Civilis",
+      "image": "/the-conspiracy-of-claudius-civilis.jpg"
+    },
+    {
+      "yearOfCreation": "1669",
+      "name": "The Jewish Bride",
+      "image": "/the-jewish-bride.jpg"
+    }
+  ]
+}

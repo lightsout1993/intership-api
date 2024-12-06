@@ -1,4 +1,4 @@
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -14,11 +14,7 @@ export class TokenService {
     @InjectModel(Token.name) private readonly TokenModel: Model<Token>,
   ) {}
 
-  async create(
-    user: User,
-    fingerprint: string,
-    refreshToken: string,
-  ): Promise<Token> {
+  async create(user: User, fingerprint: string, refreshToken: string) {
     const tokens = await this.TokenModel.find({ user: user._id }).exec();
 
     if (tokens.length >= 5) {
@@ -31,10 +27,7 @@ export class TokenService {
     return token.save();
   }
 
-  async check(
-    fingerprint: string,
-    refreshToken: string,
-  ): Promise<Token | null> {
+  async check(fingerprint: string, refreshToken: string) {
     const token = await this.TokenModel.findOne({ refreshToken });
 
     if (token && token.fingerprint !== fingerprint) {
@@ -45,26 +38,24 @@ export class TokenService {
     return token;
   }
 
-  async remove(token: string): Promise<void> {
+  async remove(token: string) {
     const tokenModel = await this.findByRefreshToken(token);
-    const params = { tokens: tokenModel._id };
 
-    this.UserModel.updateOne({ $in: params }, { $pull: params });
+    this.UserModel.updateOne(
+      { tokens: { $in: tokenModel._id } },
+      { $pull: { tokens: tokenModel._id } },
+    );
     tokenModel.deleteOne();
   }
 
-  async update(
-    _id: Types.ObjectId,
-    { refreshToken }: TokensDto,
-    fingerprint: string,
-  ): Promise<void> {
+  async update(_id: unknown, { refreshToken }: TokensDto, fingerprint: string) {
     this.TokenModel.updateOne(
       { _id },
       { $set: { refreshToken, fingerprint } },
     ).exec();
   }
 
-  async findByRefreshToken(refreshToken: string): Promise<Token> {
+  async findByRefreshToken(refreshToken: string) {
     return this.TokenModel.findOne({ refreshToken }).exec();
   }
 }
